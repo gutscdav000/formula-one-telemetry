@@ -5,6 +5,7 @@ use crate::algebras::car_data_api::CarDataApiImpl;
 use crate::algebras::http_requester::TelemetryHttpRequester;
 use crate::types::driver::*;
 use crate::types::session::Session;
+use crate::types::car_data::CarData;
 
 fn main() {
     println!("Hello, world!");
@@ -21,4 +22,7 @@ fn main() {
     let session: Session = sessions.unwrap().pop().unwrap();
     let drivers: Option<Vec<Driver>> = api.get_drivers(session.session_key, &driver_number);
     println!("Drivers: {:?}", drivers);
+
+    let car_data: Option<Vec<CarData>> = api.get_car_data(session.session_key, &driver_number, Some(315));
+    println!("CarData: {:?}", car_data);
 }

@@ -1,4 +1,3 @@
-
 #[cfg(test)]
 mod tests {
     use formula_one_telemetry::algebras::car_data_api::CarDataApi;
