@@ -5,7 +5,6 @@ mod tests {
     use formula_one_telemetry::algebras::car_data_api::CarDataApiImpl;
     use formula_one_telemetry::algebras::http_requester::TelemetryHttpRequester;
     use formula_one_telemetry::types::session::Session;
-    use std::error::Error;
 
     const HTTP_REQUESTER: TelemetryHttpRequester = TelemetryHttpRequester;
     const API: CarDataApiImpl = CarDataApiImpl{

@@ -15,6 +15,7 @@ impl HttpRequester for TelemetryHttpRequester {
         let response = attohttpc::get(url).send()?;
 	if response.is_success() {
 	    let body = response.text()?;
+	    println!("body: {}", body);
             let parsed = serde_json::from_str::<T>(&body);
 	    
 	    match parsed {
