@@ -1,8 +1,8 @@
 # formula-one-telemetry
 
 ## api requests
-- car data
-X drivers
+- X car data
+- X drivers 
 - intervals
 - laps
 - location
@@ -10,7 +10,7 @@ X drivers
 - pit
 - position
 - race controls
-X sessions
+- X sessions
 - stints
 - team radio
 - weather
