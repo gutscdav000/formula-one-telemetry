@@ -8,6 +8,7 @@ use crate::types::car_location::CarLocation;
 use crate::types::driver::*;
 use crate::types::interval::Interval;
 use crate::types::lap::Lap;
+use crate::types::meeting::Meeting;
 use crate::types::session::Session;
 
 fn main() {
@@ -36,9 +37,11 @@ fn main() {
     let laps: Option<Vec<Lap>> = api.get_lap(session.session_key, &driver_number, 8);
     println!("Laps: {:?}", laps);
 
-    //session_key=9161&driver_number=81&date>2023-09-16T13:03:35.200&date<2023-09-16T13:03:35.800
     let car_loc_driver = get_driver_number(&DriverName::OscarPiastri);
     let car_locations: Option<Vec<CarLocation>> = api.get_car_location(9161, &car_loc_driver, &"2023-09-16T13:03:35.200", &"2023-09-16T13:03:35.800");
     println!("CarLocations: {:?}", car_locations);
+
+    let meeting: Option<Vec<Meeting>> = api.get_meeting(2023, &"Singapore");
+    println!("Meeting: {:?}", meeting);
     
 }
