@@ -3,7 +3,7 @@
 ## api requests
 - X car data
 - X drivers 
-- intervals
+- X intervals
 - laps
 - location
 - meetings

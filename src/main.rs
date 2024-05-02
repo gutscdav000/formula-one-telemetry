@@ -6,6 +6,7 @@ use crate::algebras::http_requester::TelemetryHttpRequester;
 use crate::types::driver::*;
 use crate::types::session::Session;
 use crate::types::car_data::CarData;
+use crate::types::interval::Interval;
 
 fn main() {
     println!("Hello, world!");
@@ -25,4 +26,8 @@ fn main() {
 
     let car_data: Option<Vec<CarData>> = api.get_car_data(session.session_key, &driver_number, Some(315));
     println!("CarData: {:?}", car_data);
+
+    let interv: Option<f32> = Some(0.01f32);
+    let interval: Option<Vec<Interval>> = api.get_intervals(session.session_key, interv);
+    println!("Interval: {:?}", interval);
 }

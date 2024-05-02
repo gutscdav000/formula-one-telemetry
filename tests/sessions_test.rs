@@ -14,23 +14,24 @@ mod tests {
     #[test]
     fn successful_sessions_request() {
 
-	let expected_sessions: Vec<Session> = vec![
-	    Session {
-		circuit_key: 7,
-		circuit_short_name: "Spa-Francorchamps".to_string(),
-		country_code: "BEL".to_string(), country_key: 16,
-		country_name: "Belgium".to_string(),
-		date_end: "2023-07-29T15:35:00".to_string(),
-		date_start: "2023-07-29T15:05:00".to_string(),
-		gmt_offset: "02:00:00".to_string(),
-		location: "Spa-Francorchamps".to_string(),
-		meeting_key: 1216,
-		session_key: 9140,
-		session_name: "Sprint".to_string(),
-		session_type: "Race".to_string(),
-		year: 2023
-	    }
-	];
+	let expected_sessions: Vec<Session> =
+	    vec![
+		Session {
+		    circuit_key: 7,
+		    circuit_short_name: "Spa-Francorchamps".to_string(),
+		    country_code: "BEL".to_string(),
+		    country_key: 16,
+		    country_name: "Belgium".to_string(),
+		    date_end: "2023-07-29T15:35:00+00:00".to_string(),
+		    date_start: "2023-07-29T15:05:00+00:00".to_string(),
+		    gmt_offset: "02:00:00".to_string(),
+		    location: "Spa-Francorchamps".to_string(),
+		    meeting_key: 1216,
+		    session_key: 9140,
+		    session_name: "Sprint".to_string(),
+		    session_type: "Race".to_string(),
+		    year: 2023 }
+	    ];
 	
 	let sessions: Option<Vec<Session>> = API.get_session(&"Belgium".to_string(), &"Sprint".to_string(), 2023);
 	println!("Sessions: {:?}", sessions);

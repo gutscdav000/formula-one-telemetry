@@ -20,6 +20,7 @@ impl HttpRequester for TelemetryHttpRequester {
 		Ok(val) => return Ok(val),
 		Err(e) => {
 		    println!("Error parsing JSON: {}", e);
+//		    println!("Body: {}", body);
 		    return Err(Box::new(e));
 		}
 	    }
