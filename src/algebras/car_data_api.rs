@@ -4,6 +4,7 @@ use crate::algebras::http_requester::HttpRequester;
 use crate::types::driver::*;
 use crate::types::car_data::CarData;
 use crate::types::interval::Interval;
+use crate::types::lap::Lap;
 use crate::types::session::Session;
 
 
@@ -12,6 +13,7 @@ pub trait CarDataApi {
     fn get_drivers(&self, session_key: u32, driver_number: &DriverNumber) -> Option<Vec<Driver>>;
     fn get_car_data(&self, session_key: u32, driver_number: &DriverNumber, speed: Option<u32>) -> Option<Vec<CarData>>;
     fn get_intervals(&self, session_key: u32, maybe_interval: Option<f32>) -> Option<Vec<Interval>>;
+    fn get_lap(&self, session_key: u32, driver_number: &DriverNumber, lap: u32) -> Option<Vec<Lap>>;
 }
 
 pub struct CarDataApiImpl<'a> {
@@ -57,6 +59,16 @@ impl CarDataApi for CarDataApiImpl<'_> {
 	match self.http_requester.get::<Vec<Interval>>(&request_url) {
 	    Ok(interval) if interval.is_empty() => None,
 	    Ok(interval) => Some(interval),
+	    Err(_) => None,
+	}
+    }
+
+    fn get_lap(&self, session_key: u32, driver_number: &DriverNumber, lap: u32) -> Option<Vec<Lap>> {
+	let request_url = self.uri.to_owned() + &format!("/v1/laps?session_key={}&driver_number={}&lap_number={}", session_key, driver_number, lap);
+	println!("{:?}", request_url);
+	match self.http_requester.get::<Vec<Lap>>(&request_url) {
+	    Ok(laps) if laps.is_empty() => None,
+	    Ok(laps) => Some(laps),
 	    Err(_) => None,
 	}
     }

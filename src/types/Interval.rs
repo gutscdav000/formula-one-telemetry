@@ -13,13 +13,13 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
-pub struct Interval   {
-    pub gap_to_leader: Option<f64>,
-    pub interval: Option<f64>,
-    pub driver_number: u64,
+pub struct Interval {
+    pub gap_to_leader: Option<f32>,
+    pub interval: Option<f32>,
+    pub driver_number: u32,
     pub date: String, //TODO: make this a timestamp
-    pub session_key: u64,
-    pub meeting_key: u64,
+    pub session_key: u32,
+    pub meeting_key: u32,
 }
 
     

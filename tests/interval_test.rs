@@ -32,7 +32,7 @@ mod tests {
 	let expected_interval = vec! [
 	    Interval {
 		gap_to_leader: Some(6.961),
-		interval: 0.007,
+		interval: Some(0.007),
 		driver_number: 18,
 		date: "2023-07-29T16:04:11.210000+00:00".to_string(),
 		session_key: 9140,
@@ -40,7 +40,7 @@ mod tests {
 	    },
 	    Interval {
 		gap_to_leader: Some(14.149),
-		interval: 0.008,
+		interval: Some(0.008),
 		driver_number: 31,
 		date: "2023-07-29T16:09:50.972000+00:00".to_string(),
 		session_key: 9140,

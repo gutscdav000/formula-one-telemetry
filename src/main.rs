@@ -3,10 +3,11 @@ pub mod types;
 use crate::algebras::car_data_api::CarDataApi;
 use crate::algebras::car_data_api::CarDataApiImpl;
 use crate::algebras::http_requester::TelemetryHttpRequester;
-use crate::types::driver::*;
-use crate::types::session::Session;
 use crate::types::car_data::CarData;
+use crate::types::driver::*;
 use crate::types::interval::Interval;
+use crate::types::lap::Lap;
+use crate::types::session::Session;
 
 fn main() {
     println!("Hello, world!");
@@ -30,4 +31,7 @@ fn main() {
     let interv: Option<f32> = Some(0.01f32);
     let interval: Option<Vec<Interval>> = api.get_intervals(session.session_key, interv);
     println!("Interval: {:?}", interval);
+
+    let laps: Option<Vec<Lap>> = api.get_lap(session.session_key, &driver_number, 8);
+    println!("Laps: {:?}", laps);
 }
