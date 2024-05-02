@@ -12,7 +12,7 @@ mod tests {
     };
 
     #[test]
-    fn successful_drivers_request() {
+    fn successful_pit_request() {
 
 	let expected_pit = vec![
 	    Pit {
@@ -35,7 +35,7 @@ mod tests {
     }
 
     #[test]
-    fn failed_request_sessions() {
+    fn failed_request_pit() {
 	let pit: Option<Vec<Pit>> = API.get_pit(9158, Some(1));
 	assert_eq!(pit, None)
     }

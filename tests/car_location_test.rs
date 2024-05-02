@@ -13,7 +13,7 @@ mod tests {
     };
 
     #[test]
-    fn successful_drivers_request() {
+    fn successful_car_location_request() {
 	let driver_number = get_driver_number(&DriverName::MaxVerstappen);
 	let expected_car_locations = vec![
 	    CarLocation {
@@ -47,7 +47,7 @@ mod tests {
     }
 
         #[test]
-    fn failed_request_sessions() {
+    fn failed_request_car_location() {
 	let car_locations: Option<Vec<CarLocation>> = API.get_car_location(9140, &DriverNumber::new(150), &"2023-09-16T13:03:35.200", &"2023-09-16T13:03:35.800");
 	assert_eq!(car_locations, None)
     }

@@ -14,7 +14,7 @@ mod tests {
     };
 	
     #[test]
-    fn successful_sessions_request() {
+    fn successful_lap_request() {
 	let session = Session {
 	    circuit_key: 7,
 	    circuit_short_name: "Spa-Francorchamps".to_string(),

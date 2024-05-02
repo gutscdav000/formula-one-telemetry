@@ -12,7 +12,7 @@ mod tests {
     };
 
     #[test]
-    fn successful_drivers_request() {
+    fn successful_meeting_request() {
 
 	let expected_meeting = vec![
 	    Meeting {
@@ -41,7 +41,7 @@ mod tests {
     }
 
     #[test]
-    fn failed_request_sessions() {
+    fn failed_request_meeting() {
 	let meeting: Option<Vec<Meeting>> = API.get_meeting(2026, &"Rajasthan");
 	assert_eq!(meeting, None)
     }

@@ -13,7 +13,7 @@ mod tests {
     };
 
     #[test]
-    fn successful_car_data_request() {
+    fn successful_interval_request() {
 	let session = Session {
 		circuit_key: 7,
 		circuit_short_name: "Spa-Francorchamps".to_string(),

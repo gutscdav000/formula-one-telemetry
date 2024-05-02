@@ -56,7 +56,7 @@ mod tests {
     }
 
     #[test]
-    fn failed_request_sessions() {
+    fn failed_request_driver() {
 	let drivers: Option<Vec<Driver>> = API.get_drivers(999999, &DriverNumber::new(950));
 	assert_eq!(drivers, None)
     }
