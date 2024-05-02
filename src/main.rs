@@ -10,6 +10,7 @@ use crate::types::interval::Interval;
 use crate::types::lap::Lap;
 use crate::types::meeting::Meeting;
 use crate::types::pit::Pit;
+use crate::types::position::Position;
 use crate::types::session::Session;
 
 fn main() {
@@ -47,5 +48,8 @@ fn main() {
 
     let pit: Option<Vec<Pit>> = api.get_pit(9158, Some(25));
     println!("Pit: {:?}", pit);
+    
+    let position: Option<Vec<Position>> = api.get_position(1217, &driver_number,Some(1));
+    println!("Position: {:?}", position);
     
 }

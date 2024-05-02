@@ -8,6 +8,7 @@ use crate::types::interval::Interval;
 use crate::types::lap::Lap;
 use crate::types::meeting::Meeting;
 use crate::types::pit::Pit;
+use crate::types::position::Position;
 use crate::types::session::Session;
 
 
@@ -20,6 +21,7 @@ pub trait CarDataApi {
     fn get_car_location(&self, session_key: u32, driver_number: &DriverNumber, start_time: &str, end_time: &str) -> Option<Vec<CarLocation>>;
     fn get_meeting(&self, year: u32, country: &str) -> Option<Vec<Meeting>>;
     fn get_pit(&self, session_key: u32, pit_duration: Option<u32>) -> Option<Vec<Pit>>;
+    fn get_position(&self, meeting_key: u32, driver_number: &DriverNumber, position: Option<u32>) -> Option<Vec<Position>>;
 }
 
 pub struct CarDataApiImpl<'a> {
@@ -101,11 +103,22 @@ impl CarDataApi for CarDataApiImpl<'_> {
 
     fn get_pit(&self, session_key: u32, pit_duration: Option<u32>) -> Option<Vec<Pit>> {
 	let pit_duration_str = pit_duration.map_or_else(|| "".to_string(), |p| format!("&pit_duration<{}", &p));
-	    let request_url = self.uri.to_owned() + &format!("/v1/pit?session_key={}{}", session_key, pit_duration_str);
+	let request_url = self.uri.to_owned() + &format!("/v1/pit?session_key={}{}", session_key, pit_duration_str);
 	println!("{:?}", request_url);
 	match self.http_requester.get::<Vec<Pit>>(&request_url) {
 	    Ok(pit) if pit.is_empty() => None,
 	    Ok(pit) => Some(pit),
+	    Err(_) => None,
+	}
+    }
+
+    fn get_position(&self, meeting_key: u32, driver_number: &DriverNumber, position: Option<u32>) -> Option<Vec<Position>> {
+	let position_str = position.map_or_else(|| "".to_string(), |p| format!("&position<={}", p));
+	let request_url = self.uri.to_owned() + &format!("/v1/position?meeting_key={}&driver_number={}{}", meeting_key, driver_number, position_str);
+	println!("{:?}", request_url);
+	match self.http_requester.get::<Vec<Position>>(&request_url) {
+	    Ok(position) if position.is_empty() => None,
+	    Ok(position) => Some(position),
 	    Err(_) => None,
 	}
     }

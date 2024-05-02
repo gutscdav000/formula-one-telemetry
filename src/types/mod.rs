@@ -5,4 +5,5 @@ pub mod interval;
 pub mod lap;
 pub mod meeting;
 pub mod pit;
+pub mod position;
 pub mod session;

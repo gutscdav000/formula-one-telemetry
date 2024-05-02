@@ -1,6 +1,6 @@
 # formula-one-telemetry
 
-## api requests 7/13
+## api requests 9/13
 - X car data
 - X drivers 
 - X intervals
@@ -8,7 +8,7 @@
 - X location
 - X meetings
 - X pit
-- position
+- X position
 - race controls
 - X sessions
 - stints
