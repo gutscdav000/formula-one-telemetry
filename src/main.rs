@@ -9,6 +9,7 @@ use crate::types::driver::*;
 use crate::types::interval::Interval;
 use crate::types::lap::Lap;
 use crate::types::meeting::Meeting;
+use crate::types::pit::Pit;
 use crate::types::session::Session;
 
 fn main() {
@@ -43,5 +44,8 @@ fn main() {
 
     let meeting: Option<Vec<Meeting>> = api.get_meeting(2023, &"Singapore");
     println!("Meeting: {:?}", meeting);
+
+    let pit: Option<Vec<Pit>> = api.get_pit(9158, Some(25));
+    println!("Pit: {:?}", pit);
     
 }
