@@ -14,6 +14,7 @@ use crate::types::pit::Pit;
 use crate::types::position::Position;
 use crate::types::race_controls::*;
 use crate::types::session::Session;
+use crate::types::stint::Stint;
 
 fn main() {
     println!("Hello, world!");
@@ -55,5 +56,7 @@ fn main() {
     println!("Position: {:?}", position);
     let race_control: Option<Vec<RaceControl>> = api.get_race_control(Some(Category::Flag), Some(Flag::BlackAndWhite), Some(driver_number), Some("2023-01-01".to_string()), Some("2023-09-01".to_string()));
     println!("RaceControl: {:?}", race_control);
-    
+
+    let stints: Option<Vec<Stint>> = api.get_stints(9165, Some(3));
+    println!("Stint: {:?}", stints);
 }

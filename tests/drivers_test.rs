@@ -63,12 +63,11 @@ mod tests {
 
     #[test]
     fn serialize_driver_number() {
-	let i = 1;
 	let driver_number = get_driver_number(&DriverName::MaxVerstappen);
         let serialized = serde_json::to_string(&driver_number).unwrap();
         assert_eq!(serialized, "1");
 	
-        let deserialized: DriverNumber = serde_json::from_str(&serialized).unwrap()
+        let deserialized: DriverNumber = serde_json::from_str(&serialized).unwrap();
         assert_eq!(deserialized, driver_number);
     }
 

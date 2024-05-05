@@ -12,6 +12,7 @@ use crate::types::pit::Pit;
 use crate::types::race_controls::*;
 use crate::types::position::Position;
 use crate::types::session::Session;
+use crate::types::stint::Stint;
 
 
 pub trait CarDataApi {
@@ -25,6 +26,7 @@ pub trait CarDataApi {
     fn get_pit(&self, session_key: u32, pit_duration: Option<u32>) -> Option<Vec<Pit>>;
     fn get_position(&self, meeting_key: u32, driver_number: &DriverNumber, position: Option<u32>) -> Option<Vec<Position>>;
     fn get_race_control(&self, category: Option<Category>, flag: Option<Flag>, driver_number: Option<DriverNumber>, start_date: Option<String>, end_date: Option<String>) -> Option<Vec<RaceControl>>;
+    fn get_stints(&self, session_key: u32, tyre_age: Option<u32>) -> Option<Vec<Stint>>;
 }
 
 pub struct CarDataApiImpl<'a> {
@@ -133,6 +135,17 @@ impl CarDataApi for CarDataApiImpl<'_> {
 	match self.http_requester.get::<Vec<RaceControl>>(&request_url) {
 	    Ok(race_control) if race_control.is_empty() => None,
 	    Ok(race_control) => Some(race_control),
+	    Err(_) => None,
+	}
+    }
+
+    fn get_stints(&self, session_key: u32, tyre_age: Option<u32>) -> Option<Vec<Stint>> {
+	let tyre_age_at_start = tyre_age.map_or_else(|| "".to_string(), |t| format!("&tyre_age_at_start>={}", &t));
+	let request_url = self.uri.to_owned() + &format!("/v1/stints?session_key={}{}", session_key, tyre_age_at_start);
+	println!("{:?}", request_url);
+	match self.http_requester.get::<Vec<Stint>>(&request_url) {
+	    Ok(stint) if stint.is_empty() => None,
+	    Ok(stint) => Some(stint),
 	    Err(_) => None,
 	}
     }
