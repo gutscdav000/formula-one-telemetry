@@ -15,6 +15,7 @@ use crate::types::position::Position;
 use crate::types::race_controls::*;
 use crate::types::session::Session;
 use crate::types::stint::Stint;
+use crate::types::team_radio::TeamRadio;
 
 fn main() {
     println!("Hello, world!");
@@ -59,4 +60,7 @@ fn main() {
 
     let stints: Option<Vec<Stint>> = api.get_stints(9165, Some(3));
     println!("Stint: {:?}", stints);
+
+    let team_radio: Option<Vec<TeamRadio>> = api.get_team_radio(9158, Some(driver_number));
+    println!("TeamRadio: {:?}", team_radio);
 }
