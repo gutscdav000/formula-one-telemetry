@@ -16,6 +16,7 @@ use crate::types::race_controls::*;
 use crate::types::session::Session;
 use crate::types::stint::Stint;
 use crate::types::team_radio::TeamRadio;
+use crate::types::weather::Weather;
 
 fn main() {
     println!("Hello, world!");
@@ -63,4 +64,7 @@ fn main() {
 
     let team_radio: Option<Vec<TeamRadio>> = api.get_team_radio(9158, Some(driver_number));
     println!("TeamRadio: {:?}", team_radio);
+
+    let weather: Option<Vec<Weather>> = api.get_weather(1208, Some(130), Some(52));
+    println!("Weather: {:?}", weather);
 }

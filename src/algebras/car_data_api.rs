@@ -14,6 +14,7 @@ use crate::types::position::Position;
 use crate::types::session::Session;
 use crate::types::stint::Stint;
 use crate::types::team_radio::TeamRadio;
+use crate::types::weather::Weather;
 
 pub trait CarDataApi {
     fn get_session(&self, country_name: &str, session_name: &str, year: u32) -> Option<Vec<Session>>;
@@ -28,6 +29,7 @@ pub trait CarDataApi {
     fn get_race_control(&self, category: Option<Category>, flag: Option<Flag>, driver_number: Option<DriverNumber>, start_date: Option<String>, end_date: Option<String>) -> Option<Vec<RaceControl>>;
     fn get_stints(&self, session_key: u32, tyre_age: Option<u32>) -> Option<Vec<Stint>>;
     fn get_team_radio(&self, session_key:u32, driver_number: Option<DriverNumber>) -> Option<Vec<TeamRadio>>;
+    fn get_weather(&self, meeting_key: u32, wind_direction: Option<u32>, track_temp: Option<u32>) -> Option<Vec<Weather>>;
 }
 
 pub struct CarDataApiImpl<'a> {
@@ -158,6 +160,18 @@ impl CarDataApi for CarDataApiImpl<'_> {
 	match self.http_requester.get::<Vec<TeamRadio>>(&request_url) {
 	    Ok(team_radio) if team_radio.is_empty() => None,
 	    Ok(team_radio) => Some(team_radio),
+	    Err(_) => None,
+	}
+    }
+
+    fn get_weather(&self, meeting_key: u32, wind_direction: Option<u32>, track_temp: Option<u32>) -> Option<Vec<Weather>> {
+	let wind_direction_str = wind_direction.map_or_else(|| "".to_string(), |wd| format!("&wind_direction>={}", &wd));
+	let track_temp_str = track_temp.map_or_else(|| "".to_string(), |tt| format!("&track_temperature>={}", &tt));
+	let request_url = self.uri.to_owned() + &format!("/v1/weather?meeting_key={}{}{}", meeting_key, wind_direction_str, track_temp_str);
+	println!("{:?}", request_url);
+	match self.http_requester.get::<Vec<Weather>>(&request_url) {
+	    Ok(weather) if weather.is_empty() => None,
+	    Ok(weather) => Some(weather),
 	    Err(_) => None,
 	}
     }

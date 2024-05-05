@@ -11,3 +11,4 @@ pub mod race_controls;
 pub mod session;
 pub mod stint;
 pub mod team_radio;
+pub mod weather;
