@@ -6,11 +6,13 @@ use crate::algebras::http_requester::TelemetryHttpRequester;
 use crate::types::car_data::CarData;
 use crate::types::car_location::CarLocation;
 use crate::types::driver::*;
+use crate::types::flag::*;
 use crate::types::interval::Interval;
 use crate::types::lap::Lap;
 use crate::types::meeting::Meeting;
 use crate::types::pit::Pit;
 use crate::types::position::Position;
+use crate::types::race_controls::*;
 use crate::types::session::Session;
 
 fn main() {
@@ -51,5 +53,7 @@ fn main() {
     
     let position: Option<Vec<Position>> = api.get_position(1217, &driver_number,Some(1));
     println!("Position: {:?}", position);
+    let race_control: Option<Vec<RaceControl>> = api.get_race_control(Some(Category::Flag), Some(Flag::BlackAndWhite), Some(driver_number), Some("2023-01-01".to_string()), Some("2023-09-01".to_string()));
+    println!("RaceControl: {:?}", race_control);
     
 }

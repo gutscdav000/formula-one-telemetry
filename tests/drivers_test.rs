@@ -52,13 +52,24 @@ mod tests {
 	drivers.map_or_else(
 	    || panic!("Test failed, no data received"),
 	    |d| assert_eq!(d, expected_driver)
-	)	
+	)
     }
 
     #[test]
     fn failed_request_driver() {
 	let drivers: Option<Vec<Driver>> = API.get_drivers(999999, &DriverNumber::new(950));
 	assert_eq!(drivers, None)
+    }
+
+    #[test]
+    fn serialize_driver_number() {
+	let i = 1;
+	let driver_number = get_driver_number(&DriverName::MaxVerstappen);
+        let serialized = serde_json::to_string(&driver_number).unwrap();
+        assert_eq!(serialized, "1");
+	
+        let deserialized: DriverNumber = serde_json::from_str(&serialized).unwrap()
+        assert_eq!(deserialized, driver_number);
     }
 
 }

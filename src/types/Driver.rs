@@ -59,8 +59,8 @@ pub enum DriverName {
     OscarPiastri,
 }
 
-#[derive(Hash, Eq, PartialEq, Clone, Debug, Copy)]
-pub struct DriverNumber(u32);
+#[derive(Serialize, Deserialize, Hash, Eq, PartialEq, Clone, Debug, Copy)]
+pub struct DriverNumber(#[serde(rename = "driver_number")] u32);
 impl fmt::Display for DriverNumber {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:?}", self.0)

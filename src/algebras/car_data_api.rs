@@ -4,10 +4,12 @@ use crate::algebras::http_requester::HttpRequester;
 use crate::types::driver::*;
 use crate::types::car_data::CarData;
 use crate::types::car_location::CarLocation;
+use crate::types::flag::Flag;
 use crate::types::interval::Interval;
 use crate::types::lap::Lap;
 use crate::types::meeting::Meeting;
 use crate::types::pit::Pit;
+use crate::types::race_controls::*;
 use crate::types::position::Position;
 use crate::types::session::Session;
 
@@ -22,6 +24,7 @@ pub trait CarDataApi {
     fn get_meeting(&self, year: u32, country: &str) -> Option<Vec<Meeting>>;
     fn get_pit(&self, session_key: u32, pit_duration: Option<u32>) -> Option<Vec<Pit>>;
     fn get_position(&self, meeting_key: u32, driver_number: &DriverNumber, position: Option<u32>) -> Option<Vec<Position>>;
+    fn get_race_control(&self, category: Option<Category>, flag: Option<Flag>, driver_number: Option<DriverNumber>, start_date: Option<String>, end_date: Option<String>) -> Option<Vec<RaceControl>>;
 }
 
 pub struct CarDataApiImpl<'a> {
@@ -122,4 +125,30 @@ impl CarDataApi for CarDataApiImpl<'_> {
 	    Err(_) => None,
 	}
     }
+
+    fn get_race_control(&self, category: Option<Category>, flag: Option<Flag>, driver_number: Option<DriverNumber>, start_date: Option<String>, end_date: Option<String>) -> Option<Vec<RaceControl>> {
+	let params = build_query_params(category, flag, driver_number, start_date, end_date);
+	let request_url = self.uri.to_owned() + &"/v1/race_control" + &params;
+	println!("{:?}", request_url);
+	match self.http_requester.get::<Vec<RaceControl>>(&request_url) {
+	    Ok(race_control) if race_control.is_empty() => None,
+	    Ok(race_control) => Some(race_control),
+	    Err(_) => None,
+	}
+    }
 }
+
+        fn build_query_params(category: Option<Category>, flag: Option<Flag>, driver_number: Option<DriverNumber>, start_date: Option<String>, end_date: Option<String>) -> String {
+		let category_str = category.map_or_else(|| "".to_string(), |c| format!("&category={:?}", c));
+	let flag_str = flag.map_or_else(|| "".to_string(), |f| format!("&flag={}", f));
+	let driver_num_str = driver_number.map_or_else(|| "".to_string(), |d| format!("&driver_number={}", d));
+	let start_date_str = start_date.map_or_else(|| "".to_string(), |d| format!("&date>={}", d));
+	let end_date_str = end_date.map_or_else(|| "".to_string(), |d| format!("&date<{}", d));
+	let s = category_str + &flag_str + &driver_num_str + &start_date_str + &end_date_str;
+
+	if!s.is_empty() && s.starts_with('&') {
+	    ("?".to_owned() + &s[1..]).to_string()
+	} else {
+	    s
+	}
+    }
