@@ -19,7 +19,7 @@ use crate::types::weather::Weather;
 pub trait CarDataApi {
     fn get_session(&self, country_name: &str, session_name: &str, year: u32) -> Option<Vec<Session>>;
     fn get_drivers(&self, session_key: u32, driver_number: &DriverNumber) -> Option<Vec<Driver>>;
-    fn get_car_data(&self, session_key: u32, driver_number: &DriverNumber, speed: Option<u32>) -> Option<Vec<CarData>>;
+    fn get_car_data(&self, session_key: u32, driver_number: Option<DriverNumber>, speed: Option<u32>) -> Option<Vec<CarData>>;
     fn get_intervals(&self, session_key: u32, maybe_interval: Option<f32>) -> Option<Vec<Interval>>;
     fn get_lap(&self, session_key: u32, driver_number: &DriverNumber, lap: u32) -> Option<Vec<Lap>>;
     fn get_car_location(&self, session_key: u32, driver_number: &DriverNumber, start_time: &str, end_time: &str) -> Option<Vec<CarLocation>>;
@@ -57,9 +57,10 @@ impl CarDataApi for CarDataApiImpl<'_> {
 	}
     }
 
-    fn get_car_data(&self, session_key: u32, driver_number: &DriverNumber, speed: Option<u32>) -> Option<Vec<CarData>> {
-	let speed = speed.map_or_else(|| "".to_string(), |s| format!("&speed>={}", s));
-	let request_url = self.uri.to_owned() + &format!("/v1/car_data?driver_number={}&session_key={}{}", driver_number, session_key, speed);
+    fn get_car_data(&self, session_key: u32, driver_number: Option<DriverNumber>, speed: Option<u32>) -> Option<Vec<CarData>> {
+	let driver_num_str = driver_number.map_or_else(|| "".to_string(), |dr| format!("&driver_number={}", dr));
+	let speed = speed.map_or_else(|| "".to_string(), |s| format!("&speed>={}", s));	
+	let request_url = self.uri.to_owned() + &format!("/v1/car_data?session_key={}{}{}", session_key, driver_num_str, speed);
 	println!("{:?}", request_url);
 	match self.http_requester.get::<Vec<CarData>>(&request_url) {
 	    Ok(car_data) if car_data.is_empty() => None,

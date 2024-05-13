@@ -55,7 +55,7 @@ mod tests {
 		      throttle: 100 }
 	];
 	
-	let car_data: Option<Vec<CarData>> = API.get_car_data(session.session_key, &driver_number, Some(315));
+	let car_data: Option<Vec<CarData>> = API.get_car_data(session.session_key, Some(driver_number), Some(315));
 	println!("CarData: {:?}", car_data);
 	car_data.map_or_else(
 	    || panic!("Test failed, no data received"),
@@ -65,7 +65,7 @@ mod tests {
 
     #[test]
     fn failed_car_data_request() {
-	let drivers: Option<Vec<CarData>> = API.get_car_data(99999, &DriverNumber::new(950), Some(315));
+	let drivers: Option<Vec<CarData>> = API.get_car_data(99999, Some(DriverNumber::new(950)), Some(315));
 	assert_eq!(drivers, None)
     }
 }

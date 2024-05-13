@@ -31,8 +31,9 @@ fn main() {
     
     let sessions: Option<Vec<Session>> = api.get_session(&"Belgium".to_string(), &"Race".to_string(), 2023);
     println!("Sessions: {:?}", sessions);
+    let session: Session = sessions.and_then(|vec| vec.clone().pop()).expect("Session not found, or request timed out");
 
-    
+    let car_data: Option<Vec<CarData>> = api.get_car_data(session.session_key, None, None);
 }
 
 
@@ -51,8 +52,8 @@ fn test_requests() {
     let drivers: Option<Vec<Driver>> = api.get_drivers(session.session_key, &driver_number);
     println!("Drivers: {:?}", drivers);
 
-    let car_data: Option<Vec<CarData>> = api.get_car_data(session.session_key, &driver_number, Some(315));
-    println!("CarData: {:?}", car_data);
+    let car_data: Option<Vec<CarData>> = api.get_car_data(session.session_key, Some(driver_number), Some(315));
+    //println!("CarData: {:?}", car_data);
 
     let interv: Option<f32> = Some(0.01f32);
     let interval: Option<Vec<Interval>> = api.get_intervals(session.session_key, interv);

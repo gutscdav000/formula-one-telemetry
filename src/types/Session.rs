@@ -20,7 +20,7 @@
 */
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Clone, Serialize, Deserialize, PartialEq, Debug)]
 pub struct Session {
     pub circuit_key: u32,
     pub circuit_short_name: String,
