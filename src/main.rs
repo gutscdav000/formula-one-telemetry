@@ -18,8 +18,25 @@ use crate::types::stint::Stint;
 use crate::types::team_radio::TeamRadio;
 use crate::types::weather::Weather;
 
+use log::info;
+
 fn main() {
-    println!("Hello, world!");
+    env_logger::init();
+
+    let http_requester = TelemetryHttpRequester;
+    let api = CarDataApiImpl{
+	http_requester: &http_requester,
+	uri: "https://api.openf1.org",
+    };
+    
+    let sessions: Option<Vec<Session>> = api.get_session(&"Belgium".to_string(), &"Race".to_string(), 2023);
+    println!("Sessions: {:?}", sessions);
+
+    
+}
+
+
+fn test_requests() {
     let http_requester = TelemetryHttpRequester;
     let api = CarDataApiImpl{
 	http_requester: &http_requester,

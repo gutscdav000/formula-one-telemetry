@@ -1,5 +1,6 @@
 use attohttpc::{self};
 use anyhow::anyhow;
+use log::{error, info};
 use serde_json;
 use serde::de::DeserializeOwned;
 use std::error::Error;
@@ -19,15 +20,14 @@ impl HttpRequester for TelemetryHttpRequester {
 	    match parsed {
 		Ok(val) => return Ok(val),
 		Err(e) => {
-		    println!("Error parsing JSON: {}", e);
-//		    println!("Body: {}", body);
+		    error!("Error parsing JSON: {e}");
+//		    error!("Body: {}", body);
 		    return Err(Box::new(e));
 		}
 	    }
         } else {
-	    let status = response.status();
-	    let message = format!("Request Error: {:?}", status);
-	    println!("{}", message);
+	    let message = format!("Request Error: Status:{:?}, Body: {:?}", response.status(), response.text());
+	    error!("{message}");
             Err(anyhow!(message).into())
         }
     }
