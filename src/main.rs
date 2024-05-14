@@ -2,6 +2,8 @@ pub mod algebras;
 pub mod types;
 use crate::algebras::car_data_api::CarDataApi;
 use crate::algebras::car_data_api::CarDataApiImpl;
+use crate::algebras::event_sync::EventSync;
+use crate::algebras::event_sync::EventSyncImpl;
 use crate::algebras::http_requester::TelemetryHttpRequester;
 use crate::types::car_data::CarData;
 use crate::types::car_location::CarLocation;
@@ -17,6 +19,7 @@ use crate::types::session::Session;
 use crate::types::stint::Stint;
 use crate::types::team_radio::TeamRadio;
 use crate::types::weather::Weather;
+use tokio::*;
 
 use log::info;
 
@@ -24,27 +27,36 @@ fn main() {
     env_logger::init();
 
     let http_requester = TelemetryHttpRequester;
-    let api = CarDataApiImpl{
-	http_requester: &http_requester,
-	uri: "https://api.openf1.org",
+    let api = CarDataApiImpl {
+        http_requester: &http_requester,
+        uri: "https://api.openf1.org",
     };
-    
-    let sessions: Option<Vec<Session>> = api.get_session(&"Belgium".to_string(), &"Race".to_string(), 2023);
+    let event_sync = EventSyncImpl { api: &api };
+
+    let sessions: Option<Vec<Session>> =
+        api.get_session(&"Belgium".to_string(), &"Race".to_string(), 2023);
     println!("Sessions: {:?}", sessions);
-    let session: Session = sessions.and_then(|vec| vec.clone().pop()).expect("Session not found, or request timed out");
+    let session: Session = sessions
+        .and_then(|vec| vec.clone().pop())
+        .expect("Session not found, or request timed out");
 
-    let car_data: Option<Vec<CarData>> = api.get_car_data(session.session_key, None, None);
+    /*: Option<Vec<CarData>>*/
+    // let car_data = tokio::spawn(async move {
+    // 	api.get_car_data(session.session_key, None, None);
+    // });
+    let car_data = event_sync.car_data_sync(session.session_key, None, None);
+    //    info!("car data: {}", car_data);
 }
-
 
 fn test_requests() {
     let http_requester = TelemetryHttpRequester;
-    let api = CarDataApiImpl{
-	http_requester: &http_requester,
-	uri: "https://api.openf1.org",
+    let api = CarDataApiImpl {
+        http_requester: &http_requester,
+        uri: "https://api.openf1.org",
     };
-    
-    let sessions: Option<Vec<Session>> = api.get_session(&"Belgium".to_string(), &"Sprint".to_string(), 2023);
+
+    let sessions: Option<Vec<Session>> =
+        api.get_session(&"Belgium".to_string(), &"Sprint".to_string(), 2023);
     println!("Sessions: {:?}", sessions);
 
     let driver_number = get_driver_number(&DriverName::MaxVerstappen);
@@ -52,7 +64,8 @@ fn test_requests() {
     let drivers: Option<Vec<Driver>> = api.get_drivers(session.session_key, &driver_number);
     println!("Drivers: {:?}", drivers);
 
-    let car_data: Option<Vec<CarData>> = api.get_car_data(session.session_key, Some(driver_number), Some(315));
+    let car_data: Option<Vec<CarData>> =
+        api.get_car_data(session.session_key, Some(driver_number), Some(315));
     //println!("CarData: {:?}", car_data);
 
     let interv: Option<f32> = Some(0.01f32);
@@ -63,7 +76,12 @@ fn test_requests() {
     println!("Laps: {:?}", laps);
 
     let car_loc_driver = get_driver_number(&DriverName::OscarPiastri);
-    let car_locations: Option<Vec<CarLocation>> = api.get_car_location(9161, &car_loc_driver, &"2023-09-16T13:03:35.200", &"2023-09-16T13:03:35.800");
+    let car_locations: Option<Vec<CarLocation>> = api.get_car_location(
+        9161,
+        &car_loc_driver,
+        &"2023-09-16T13:03:35.200",
+        &"2023-09-16T13:03:35.800",
+    );
     println!("CarLocations: {:?}", car_locations);
 
     let meeting: Option<Vec<Meeting>> = api.get_meeting(2023, &"Singapore");
@@ -71,10 +89,16 @@ fn test_requests() {
 
     let pit: Option<Vec<Pit>> = api.get_pit(9158, Some(25));
     println!("Pit: {:?}", pit);
-    
-    let position: Option<Vec<Position>> = api.get_position(1217, &driver_number,Some(1));
+
+    let position: Option<Vec<Position>> = api.get_position(1217, &driver_number, Some(1));
     println!("Position: {:?}", position);
-    let race_control: Option<Vec<RaceControl>> = api.get_race_control(Some(Category::Flag), Some(Flag::BlackAndWhite), Some(driver_number), Some("2023-01-01".to_string()), Some("2023-09-01".to_string()));
+    let race_control: Option<Vec<RaceControl>> = api.get_race_control(
+        Some(Category::Flag),
+        Some(Flag::BlackAndWhite),
+        Some(driver_number),
+        Some("2023-01-01".to_string()),
+        Some("2023-09-01".to_string()),
+    );
     println!("RaceControl: {:?}", race_control);
 
     let stints: Option<Vec<Stint>> = api.get_stints(9165, Some(3));

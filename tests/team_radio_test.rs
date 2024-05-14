@@ -1,4 +1,3 @@
-
 #[cfg(test)]
 mod test {
     use formula_one_telemetry::algebras::car_data_api::CarDataApi;
@@ -8,15 +7,15 @@ mod test {
     use formula_one_telemetry::types::team_radio::TeamRadio;
 
     const HTTP_REQUESTER: TelemetryHttpRequester = TelemetryHttpRequester;
-    const API: CarDataApiImpl = CarDataApiImpl{
-	http_requester: &HTTP_REQUESTER,
-	uri: "https://api.openf1.org",
+    const API: CarDataApiImpl = CarDataApiImpl {
+        http_requester: &HTTP_REQUESTER,
+        uri: "https://api.openf1.org",
     };
-	
+
     #[test]
     fn successful_sessions_request() {
-	let driver_number = get_driver_number(&DriverName::MaxVerstappen);
-	let expected_team_radio = vec![
+        let driver_number = get_driver_number(&DriverName::MaxVerstappen);
+        let expected_team_radio = vec![
 	    TeamRadio {
 		date: "2023-09-15T09:39:02.584000+00:00".to_string(),
 		driver_number: 1,
@@ -39,17 +38,17 @@ mod test {
 		session_key: 9158
 	    }
 	];
-	let team_radio: Option<Vec<TeamRadio>> = API.get_team_radio(9158, Some(driver_number));
-	println!("TeamRadio: {:?}", team_radio);
-	team_radio.map_or_else(
-	    || panic!("Test failed, no data received"),
-	    |tr| assert_eq!(tr, expected_team_radio)
-	)
+        let team_radio: Option<Vec<TeamRadio>> = API.get_team_radio(9158, Some(driver_number));
+        println!("TeamRadio: {:?}", team_radio);
+        team_radio.map_or_else(
+            || panic!("Test failed, no data received"),
+            |tr| assert_eq!(tr, expected_team_radio),
+        )
     }
 
-        #[test]
+    #[test]
     fn failed_request_team_radio() {
-		let team_radio: Option<Vec<TeamRadio>> = API.get_team_radio(99999, None);
-	assert_eq!(team_radio, None)
+        let team_radio: Option<Vec<TeamRadio>> = API.get_team_radio(99999, None);
+        assert_eq!(team_radio, None)
     }
 }

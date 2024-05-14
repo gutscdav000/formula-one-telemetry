@@ -48,7 +48,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
-pub struct Lap  {
+pub struct Lap {
     pub date_start: String, //TODO: convert to timestamp
     pub driver_number: u32,
     pub duration_sector_1: f32,
@@ -62,9 +62,9 @@ pub struct Lap  {
     pub meeting_key: u32,
     // Dropping these because they'll throw in a null in the array sometimes
     // also this data isn't availabe during the race and IDC rn.
-//    pub segments_sector_1: Vec<u32>,
-//    pub segments_sector_2: Vec<u32>,
-//    pub segments_sector_3: Vec<u32>,
+    //    pub segments_sector_1: Vec<u32>,
+    //    pub segments_sector_2: Vec<u32>,
+    //    pub segments_sector_3: Vec<u32>,
     pub session_key: u32,
-    pub st_speed: u32
-  }
+    pub st_speed: u32,
+}

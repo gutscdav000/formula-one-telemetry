@@ -17,5 +17,5 @@ pub struct Pit {
     pub lap_number: u32,
     pub meeting_key: u32,
     pub pit_duration: f32,
-    pub session_key: u32
+    pub session_key: u32,
 }

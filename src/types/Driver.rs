@@ -1,23 +1,23 @@
-/**
-  {
-    "broadcast_name": "M VERSTAPPEN",
-    "country_code": "NED",
-    "driver_number": 1,
-    "first_name": "Max",
-    "full_name": "Max VERSTAPPEN",
-    "headshot_url": "https://www.formula1.com/content/dam/fom-website/drivers/M/MAXVER01_Max_Verstappen/maxver01.png.transform/1col/image.png",
-    "last_name": "Verstappen",
-    "meeting_key": 1219,
-    "name_acronym": "VER",
-    "session_key": 9158,
-    "team_colour": "3671C6",
-    "team_name": "Red Bull Racing"
-  }
- */
-use std::fmt;
-use std::collections::HashMap;
-use std::hash::Hash;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+/**
+ {
+   "broadcast_name": "M VERSTAPPEN",
+   "country_code": "NED",
+   "driver_number": 1,
+   "first_name": "Max",
+   "full_name": "Max VERSTAPPEN",
+   "headshot_url": "https://www.formula1.com/content/dam/fom-website/drivers/M/MAXVER01_Max_Verstappen/maxver01.png.transform/1col/image.png",
+   "last_name": "Verstappen",
+   "meeting_key": 1219,
+   "name_acronym": "VER",
+   "session_key": 9158,
+   "team_colour": "3671C6",
+   "team_name": "Red Bull Racing"
+ }
+*/
+use std::fmt;
+use std::hash::Hash;
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct Driver {
@@ -68,35 +68,33 @@ impl fmt::Display for DriverNumber {
 }
 impl DriverNumber {
     pub fn new(num: u32) -> Self {
-	DriverNumber(num)
+        DriverNumber(num)
     }
 }
 
 pub fn get_driver_number(driver_name: &DriverName) -> DriverNumber {
     let driver_map: HashMap<DriverName, DriverNumber> = HashMap::from([
-	(DriverName::MaxVerstappen, DriverNumber(1)),
-	(DriverName::LoganSargeant, DriverNumber(2)),
-	(DriverName::DanielRicciardo, DriverNumber(3)),
-	(DriverName::LandoNorris, DriverNumber(4)),
-	(DriverName::PierreGasly, DriverNumber(10)),
-	(DriverName::SergioPerez, DriverNumber(11)),
-	(DriverName::FernandoAlonso, DriverNumber(14)),
-	(DriverName::CharlesLeclerc, DriverNumber(16)),
-	(DriverName::LanceStroll, DriverNumber(18)),
-	(DriverName::KevinMagnussen, DriverNumber(20)),
-	(DriverName::YukiTsunoda, DriverNumber(22)),
-	(DriverName::AlexAlbon, DriverNumber(23)),
-	(DriverName::ZhouGuanyu, DriverNumber(24)),
-	(DriverName::NicoHulkenberg, DriverNumber(27)),
-	(DriverName::EstebanOcon, DriverNumber(31)),
-	(DriverName::LewisHamilton, DriverNumber(44)),
-	(DriverName::CarlosSainz, DriverNumber(55)),
-	(DriverName::GeorgeRussell, DriverNumber(63)),
-	(DriverName::ValtteriBottas, DriverNumber(77)),
-	(DriverName::OscarPiastri, DriverNumber(81)),
+        (DriverName::MaxVerstappen, DriverNumber(1)),
+        (DriverName::LoganSargeant, DriverNumber(2)),
+        (DriverName::DanielRicciardo, DriverNumber(3)),
+        (DriverName::LandoNorris, DriverNumber(4)),
+        (DriverName::PierreGasly, DriverNumber(10)),
+        (DriverName::SergioPerez, DriverNumber(11)),
+        (DriverName::FernandoAlonso, DriverNumber(14)),
+        (DriverName::CharlesLeclerc, DriverNumber(16)),
+        (DriverName::LanceStroll, DriverNumber(18)),
+        (DriverName::KevinMagnussen, DriverNumber(20)),
+        (DriverName::YukiTsunoda, DriverNumber(22)),
+        (DriverName::AlexAlbon, DriverNumber(23)),
+        (DriverName::ZhouGuanyu, DriverNumber(24)),
+        (DriverName::NicoHulkenberg, DriverNumber(27)),
+        (DriverName::EstebanOcon, DriverNumber(31)),
+        (DriverName::LewisHamilton, DriverNumber(44)),
+        (DriverName::CarlosSainz, DriverNumber(55)),
+        (DriverName::GeorgeRussell, DriverNumber(63)),
+        (DriverName::ValtteriBottas, DriverNumber(77)),
+        (DriverName::OscarPiastri, DriverNumber(81)),
     ]);
-    
+
     *driver_map.get(driver_name).unwrap()
 }
-
-

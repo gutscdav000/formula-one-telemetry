@@ -29,5 +29,5 @@ pub struct Meeting {
     pub meeting_key: u32,
     pub meeting_name: String,
     pub meeting_official_name: String,
-    pub year: u32
-  }
+    pub year: u32,
+}

@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
   },]
 */
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
-pub struct CarData   {
+pub struct CarData {
     pub brake: u32,
     pub date: String, //TODO: make timestamp
     pub driver_number: u32,
@@ -24,5 +24,5 @@ pub struct CarData   {
     pub rpm: u32,
     pub session_key: u32,
     pub speed: u32,
-    pub throttle: u32
+    pub throttle: u32,
 }

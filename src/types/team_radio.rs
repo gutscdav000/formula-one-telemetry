@@ -11,9 +11,9 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct TeamRadio {
-  pub date: String, //TODO: replace with timestamp
-  pub driver_number: u32,
-  pub meeting_key: u32,
-  pub recording_url: String,
-  pub session_key: u32
+    pub date: String, //TODO: replace with timestamp
+    pub driver_number: u32,
+    pub meeting_key: u32,
+    pub recording_url: String,
+    pub session_key: u32,
 }

@@ -19,5 +19,5 @@ pub struct CarLocation {
     pub session_key: u32,
     pub x: i32,
     pub y: i32,
-    pub z: i32
+    pub z: i32,
 }

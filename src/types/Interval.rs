@@ -21,5 +21,3 @@ pub struct Interval {
     pub session_key: u32,
     pub meeting_key: u32,
 }
-
-    

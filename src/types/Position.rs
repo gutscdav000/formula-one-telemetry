@@ -15,5 +15,5 @@ pub struct Position {
     pub driver_number: u32,
     pub meeting_key: u32,
     pub position: u32,
-    pub session_key: u32
+    pub session_key: u32,
 }

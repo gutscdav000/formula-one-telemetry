@@ -35,5 +35,5 @@ pub struct Session {
     pub session_key: u32,
     pub session_name: String,
     pub session_type: String,
-    pub year: u32
+    pub year: u32,
 }
