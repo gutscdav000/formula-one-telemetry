@@ -1,6 +1,7 @@
 use crate::algebras::car_data_api::CarDataApi;
 use crate::algebras::car_data_api::CarDataApiImpl;
-use crate::types::car_data::CarData;
+use crate::algebras::redis::RedisImpl;
+//use crate::types::car_data::CarData;
 use crate::types::driver::*;
 use async_trait::async_trait;
 use tokio::time::{self, Duration};
@@ -17,6 +18,7 @@ pub trait EventSync {
 
 pub struct EventSyncImpl<'a> {
     pub api: &'a CarDataApiImpl<'a>,
+    pub redis: &'a RedisImpl,
 }
 
 #[async_trait]

@@ -15,9 +15,6 @@
 use crate::types::driver::*;
 use crate::types::flag::Flag;
 use serde::{Deserialize, Serialize};
-use std::fmt;
-use std::fmt::Display;
-use std::str::FromStr;
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct RaceControl {

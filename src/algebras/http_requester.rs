@@ -1,6 +1,6 @@
 use anyhow::anyhow;
 use attohttpc::{self};
-use log::{error, info};
+use log::error;
 use serde::de::DeserializeOwned;
 use serde_json;
 use std::error::Error;
