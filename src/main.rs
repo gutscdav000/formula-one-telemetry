@@ -22,12 +22,15 @@ use crate::types::stint::Stint;
 use crate::types::team_radio::TeamRadio;
 use crate::types::weather::Weather;
 use fred::prelude::*;
+use fred::prelude::*;
 use fred::types::RedisConfig;
 use fred::types::*;
-//use log::info;
-use tokio::runtime::Runtime;
+use fred::types::*;
+use log::info;
+use std::error::Error;
 
-fn main() {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error>> {
     env_logger::init();
 
     let http_requester = TelemetryHttpRequester;
@@ -50,51 +53,32 @@ fn main() {
         .and_then(|vec| vec.clone().pop())
         .expect("Session not found, or request timed out");
 
-    redis_client.set_json::<Session>("session", &session);
+    let s = redis_client
+        .get_json::<Session, String>("session".to_string())
+        .await?;
+    println!("REDIS EMPTY: {:?}", s);
+    redis_client
+        .set_json::<Session>("session", &session)
+        .await?;
+    let se = redis_client
+        .get_json::<Session, String>("session".to_string())
+        .await?;
+    println!("REDIS Value: {:?}", se);
 
     let _car_data = event_sync.car_data_sync(session.session_key, None, None);
     //    info!("car data: {}", car_data);
+    Ok(())
 }
 
 fn setup_server() -> Result<RedisImpl, RedisError> {
-    println!("before");
-    //RedisConfig::default();
-    let config = RedisConfig {
-        fail_fast: true,
-        blocking: Blocking::default(),
-        username: None,
-        password: None,
-        server: ServerConfig::Centralized {
-            host: "0.0.0.0".to_string(),
-            port: 6379,
-        },
-        version: RespVersion::RESP2,
-        performance: PerformanceConfig::default(),
-        database: Some(0),
-        tls: None,
-    };
-    // 0.0.0.0:6379
+    info!("Connecting to redis");
+    let config: RedisConfig = RedisConfig::default();
     let reconnect_policy: ReconnectPolicy = ReconnectPolicy::new_exponential(5, 1, 10, 5);
     let client = RedisClient::new(config);
-    println!("client 1");
-    //   let _ = client.connect(Some(reconnect_policy)).await?;
-    //    let _ = client.wait_for_connect().await?;
-    // Create a Tokio runtime
-    let rt = Runtime::new().unwrap();
-
-    // Block on the async operations
-    rt.block_on(async {
-        println!("client 2");
-        client.connect(Some(reconnect_policy)).await?;
-        println!("client 3");
-        client.wait_for_connect().await?;
-        println!("client 4");
-        Ok::<(), RedisError>(())
-    })?;
-    println!("client 4");
+    let _ = client.connect(Some(reconnect_policy));
+    let _ = client.wait_for_connect();
     let redis_algebra: RedisImpl = RedisImpl { client: client };
-    println!("after");
-    //redis_algebra
+    info!("Connected to Redis");
     Ok(redis_algebra)
 }
 

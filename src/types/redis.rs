@@ -1,5 +1,6 @@
 use fred::prelude::RedisError;
 use serde_json;
+use std::error::Error;
 use std::fmt;
 
 #[derive(Debug)]
@@ -26,5 +27,11 @@ impl From<RedisError> for RedisClientError {
 impl From<serde_json::Error> for RedisClientError {
     fn from(error: serde_json::Error) -> Self {
         RedisClientError::JsonDecodingFailure(error)
+    }
+}
+
+impl Error for RedisClientError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        None
     }
 }
