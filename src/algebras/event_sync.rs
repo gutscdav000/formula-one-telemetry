@@ -8,6 +8,7 @@ use crate::types::interval::Interval;
 use crate::types::lap::Lap;
 use crate::types::pit::Pit;
 use crate::types::position::Position;
+use crate::types::stint::Stint;
 use crate::types::team_radio::TeamRadio;
 use async_trait::async_trait;
 use log::{debug, error, info, warn};
@@ -32,6 +33,7 @@ pub trait EventSync {
         driver_number: &DriverNumber,
         position: Option<u32>,
     );
+    async fn stints_sync(&self, session_key: u32, tyre_age: Option<u32>);
 }
 
 pub struct EventSyncImpl<'a> {
@@ -141,6 +143,18 @@ impl EventSync for EventSyncImpl<'_> {
                     maybe_position.clone(),
                     String::from(format!("position:{}", driver_number,)),
                 )
+                .await;
+        }
+    }
+
+    async fn stints_sync(&self, session_key: u32, tyre_age: Option<u32>) {
+        let mut time_interval = time::interval(Duration::from_secs(120));
+        loop {
+            time_interval.tick().await;
+            let maybe_stints = self.api.get_stints(session_key, tyre_age);
+            let _ = self
+                .redis
+                .redis_fire_and_forget::<Stint>(maybe_stints.clone(), String::from("stints"))
                 .await;
         }
     }

@@ -62,9 +62,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
     //     .laps_sync(session.session_key, &driver_number, 1)
     //     .await;
     // let _ = event_sync.pit_sync(session.session_key, None).await;
-    let _ = event_sync
-        .position_sync(session.meeting_key, &driver_number, None)
-        .await;
+    // let _ = event_sync
+    //     .position_sync(session.meeting_key, &driver_number, None)
+    //     .await;
+    let _ = event_sync.stints_sync(session.session_key, None).await;
     Ok(())
 }
 
