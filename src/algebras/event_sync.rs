@@ -7,6 +7,7 @@ use crate::types::driver::*;
 use crate::types::interval::Interval;
 use crate::types::lap::Lap;
 use crate::types::pit::Pit;
+use crate::types::position::Position;
 use crate::types::team_radio::TeamRadio;
 use async_trait::async_trait;
 use log::{debug, error, info, warn};
@@ -25,6 +26,12 @@ pub trait EventSync {
     async fn team_radio_sync(&self, session_key: u32, driver_number: Option<DriverNumber>);
     async fn laps_sync(&self, session_key: u32, driver_number: &DriverNumber, lap: u32);
     async fn pit_sync(&self, session_key: u32, pit_duration: Option<u32>);
+    async fn position_sync(
+        &self,
+        meeting_key: u32,
+        driver_number: &DriverNumber,
+        position: Option<u32>,
+    );
 }
 
 pub struct EventSyncImpl<'a> {
@@ -95,7 +102,7 @@ impl EventSync for EventSyncImpl<'_> {
     }
 
     async fn laps_sync(&self, session_key: u32, driver_number: &DriverNumber, lap: u32) {
-        let mut time_interval = time::interval(Duration::from_secs(5));
+        let mut time_interval = time::interval(Duration::from_secs(120));
         loop {
             time_interval.tick().await;
             let maybe_laps = self.api.get_lap(session_key, driver_number, lap);
@@ -107,13 +114,33 @@ impl EventSync for EventSyncImpl<'_> {
     }
 
     async fn pit_sync(&self, session_key: u32, pit_duration: Option<u32>) {
-        let mut time_interval = time::interval(Duration::from_secs(5));
+        let mut time_interval = time::interval(Duration::from_secs(120));
         loop {
             time_interval.tick().await;
             let maybe_pits = self.api.get_pit(session_key, pit_duration);
             let _ = self
                 .redis
                 .redis_fire_and_forget::<Pit>(maybe_pits.clone(), String::from("pits"))
+                .await;
+        }
+    }
+
+    async fn position_sync(
+        &self,
+        meeting_key: u32,
+        driver_number: &DriverNumber,
+        position: Option<u32>,
+    ) {
+        let mut time_interval = time::interval(Duration::from_secs(5));
+        loop {
+            time_interval.tick().await;
+            let maybe_position = self.api.get_position(meeting_key, driver_number, position);
+            let _ = self
+                .redis
+                .redis_fire_and_forget::<Position>(
+                    maybe_position.clone(),
+                    String::from(format!("position:{}", driver_number,)),
+                )
                 .await;
         }
     }

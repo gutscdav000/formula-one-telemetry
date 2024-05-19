@@ -9,7 +9,7 @@
 */
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct Position {
     pub date: String, //TODO: convert to timestamp
     pub driver_number: u32,
