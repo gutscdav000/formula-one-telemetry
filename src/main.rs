@@ -45,29 +45,21 @@ async fn main() -> Result<(), Box<dyn Error>> {
     };
 
     let sessions: Option<Vec<Session>> =
-        api.get_session(&"Belgium".to_string(), &"Race".to_string(), 2023);
+        api.get_session(&"Italy".to_string(), &"Qualifying".to_string(), 2024);
     println!("Sessions: {:?}", sessions);
     let session: Session = sessions
         .and_then(|vec| vec.clone().pop())
         .expect("Session not found, or request timed out");
 
-    let s = redis_client
-        .get_json::<Session, String>("session".to_string())
-        .await?;
-    println!("REDIS EMPTY: {:?}", s);
-    redis_client
-        .set_json::<Session>("session", &session)
-        .await?;
-    let se = redis_client
-        .get_json::<Session, String>("session".to_string())
-        .await?;
-    println!("REDIS Value: {:?}", se);
-
-    let _car_data = event_sync.car_data_sync(session.session_key, None, None);
+    let driver_number = get_driver_number(&DriverName::LandoNorris);
+    let _ = event_sync
+        .car_data_sync(session.session_key, Some(driver_number), Some(50))
+        .await;
     //    info!("car data: {}", car_data);
     Ok(())
 }
 
+//TODO: rewrite this into Redis::new()
 fn setup_server() -> Result<RedisImpl, RedisError> {
     info!("Connecting to redis");
     let config: RedisConfig = RedisConfig::default();

@@ -14,7 +14,7 @@ pub trait Redis {
     async fn set_json<V: Serialize + Send + Sync>(
         &self,
         key: &str,
-        value: &V,
+        value: V,
     ) -> Result<(), RedisClientError>;
     async fn get_json<V: DeserializeOwned, K: Into<RedisKey> + Send + Display + Clone>(
         &self,
@@ -31,9 +31,9 @@ impl Redis for RedisImpl {
     async fn set_json<V: Serialize + Send + Sync>(
         &self,
         key: &str,
-        value: &V,
+        value: V,
     ) -> Result<(), RedisClientError> {
-        let json = serde_json::to_string(value)?;
+        let json = serde_json::to_string(&value)?;
         self.client.set(key, json, None, None, false).await?;
         Ok(())
     }

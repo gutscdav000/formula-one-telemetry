@@ -14,6 +14,7 @@ use crate::types::session::Session;
 use crate::types::stint::Stint;
 use crate::types::team_radio::TeamRadio;
 use crate::types::weather::Weather;
+use log::debug;
 use std::vec::Vec;
 
 pub trait CarDataApi {
@@ -87,6 +88,7 @@ impl CarDataApi for CarDataApiImpl<'_> {
             + &format!(
                 "/v1/sessions?country_name={country_name}&session_name={session_name}&year={year}"
             );
+        debug!("{request_url}");
         match self.http_requester.get::<Vec<Session>>(&request_url) {
             Ok(sessions) if sessions.is_empty() => None,
             Ok(sessions) => Some(sessions),
@@ -100,7 +102,7 @@ impl CarDataApi for CarDataApiImpl<'_> {
                 "/v1/drivers?driver_number={}&session_key={}",
                 driver_number, session_key
             );
-        println!("{:?}", request_url);
+        debug!("{:?}", request_url);
         match self.http_requester.get::<Vec<Driver>>(&request_url) {
             Ok(drivers) if drivers.is_empty() => None,
             Ok(drivers) => Some(drivers),
@@ -122,7 +124,7 @@ impl CarDataApi for CarDataApiImpl<'_> {
                 "/v1/car_data?session_key={}{}{}",
                 session_key, driver_num_str, speed
             );
-        println!("{:?}", request_url);
+        debug!("{:?}", request_url);
         match self.http_requester.get::<Vec<CarData>>(&request_url) {
             Ok(car_data) if car_data.is_empty() => None,
             Ok(car_data) => Some(car_data),
@@ -142,7 +144,7 @@ impl CarDataApi for CarDataApiImpl<'_> {
                 "/v1/intervals?session_key={}{}",
                 session_key, interval_query_param
             );
-        println!("{:?}", request_url);
+        debug!("{:?}", request_url);
         match self.http_requester.get::<Vec<Interval>>(&request_url) {
             Ok(interval) if interval.is_empty() => None,
             Ok(interval) => Some(interval),
@@ -161,7 +163,7 @@ impl CarDataApi for CarDataApiImpl<'_> {
                 "/v1/laps?session_key={}&driver_number={}&lap_number={}",
                 session_key, driver_number, lap
             );
-        println!("{:?}", request_url);
+        debug!("{:?}", request_url);
         match self.http_requester.get::<Vec<Lap>>(&request_url) {
             Ok(laps) if laps.is_empty() => None,
             Ok(laps) => Some(laps),
@@ -181,7 +183,7 @@ impl CarDataApi for CarDataApiImpl<'_> {
                 "/v1/location?session_key={}&driver_number={}&date>{}&date<{}",
                 session_key, driver_number, start_time, end_time
             );
-        println!("{:?}", request_url);
+        debug!("{:?}", request_url);
         match self.http_requester.get::<Vec<CarLocation>>(&request_url) {
             Ok(locations) if locations.is_empty() => None,
             Ok(locations) => Some(locations),
@@ -192,7 +194,7 @@ impl CarDataApi for CarDataApiImpl<'_> {
     fn get_meeting(&self, year: u32, country: &str) -> Option<Vec<Meeting>> {
         let request_url =
             self.uri.to_owned() + &format!("/v1/meetings?year={}&country_name={}", year, country);
-        println!("{:?}", request_url);
+        debug!("{:?}", request_url);
         match self.http_requester.get::<Vec<Meeting>>(&request_url) {
             Ok(meeting) if meeting.is_empty() => None,
             Ok(meeting) => Some(meeting),
@@ -205,7 +207,7 @@ impl CarDataApi for CarDataApiImpl<'_> {
             pit_duration.map_or_else(|| "".to_string(), |p| format!("&pit_duration<{}", &p));
         let request_url = self.uri.to_owned()
             + &format!("/v1/pit?session_key={}{}", session_key, pit_duration_str);
-        println!("{:?}", request_url);
+        debug!("{:?}", request_url);
         match self.http_requester.get::<Vec<Pit>>(&request_url) {
             Ok(pit) if pit.is_empty() => None,
             Ok(pit) => Some(pit),
@@ -225,7 +227,7 @@ impl CarDataApi for CarDataApiImpl<'_> {
                 "/v1/position?meeting_key={}&driver_number={}{}",
                 meeting_key, driver_number, position_str
             );
-        println!("{:?}", request_url);
+        debug!("{:?}", request_url);
         match self.http_requester.get::<Vec<Position>>(&request_url) {
             Ok(position) if position.is_empty() => None,
             Ok(position) => Some(position),
@@ -243,7 +245,7 @@ impl CarDataApi for CarDataApiImpl<'_> {
     ) -> Option<Vec<RaceControl>> {
         let params = build_query_params(category, flag, driver_number, start_date, end_date);
         let request_url = self.uri.to_owned() + &"/v1/race_control" + &params;
-        println!("{:?}", request_url);
+        debug!("{:?}", request_url);
         match self.http_requester.get::<Vec<RaceControl>>(&request_url) {
             Ok(race_control) if race_control.is_empty() => None,
             Ok(race_control) => Some(race_control),
@@ -259,7 +261,7 @@ impl CarDataApi for CarDataApiImpl<'_> {
                 "/v1/stints?session_key={}{}",
                 session_key, tyre_age_at_start
             );
-        println!("{:?}", request_url);
+        debug!("{:?}", request_url);
         match self.http_requester.get::<Vec<Stint>>(&request_url) {
             Ok(stint) if stint.is_empty() => None,
             Ok(stint) => Some(stint),
@@ -279,7 +281,7 @@ impl CarDataApi for CarDataApiImpl<'_> {
                 "/v1/team_radio?session_key={}{}",
                 session_key, driver_num_str
             );
-        println!("{:?}", request_url);
+        debug!("{:?}", request_url);
         match self.http_requester.get::<Vec<TeamRadio>>(&request_url) {
             Ok(team_radio) if team_radio.is_empty() => None,
             Ok(team_radio) => Some(team_radio),
@@ -304,7 +306,7 @@ impl CarDataApi for CarDataApiImpl<'_> {
                 "/v1/weather?meeting_key={}{}{}",
                 meeting_key, wind_direction_str, track_temp_str
             );
-        println!("{:?}", request_url);
+        debug!("{:?}", request_url);
         match self.http_requester.get::<Vec<Weather>>(&request_url) {
             Ok(weather) if weather.is_empty() => None,
             Ok(weather) => Some(weather),

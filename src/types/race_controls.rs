@@ -19,8 +19,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct RaceControl {
     pub category: Category,
-    pub date: String,                //TODO: make timestamps
-    pub driver_number: DriverNumber, //TODO: update type
+    pub date: String, //TODO: make timestamps
+    pub driver_number: DriverNumber,
     pub flag: Flag,
     pub lap_number: u32,
     pub meeting_key: u32,
