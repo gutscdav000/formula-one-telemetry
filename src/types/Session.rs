@@ -1,4 +1,3 @@
-use fred::prelude::*;
 /**
 [
   {
@@ -37,25 +36,4 @@ pub struct Session {
     pub session_name: String,
     pub session_type: String,
     pub year: u32,
-}
-
-impl FromRedis for Session {
-    fn from_value(value: RedisValue) -> Result<Self, fred::error::RedisError> {
-        // Convert the RedisValue to a JSON string
-        println!("Value: {:?}", value);
-        let json_str = match value {
-            RedisValue::String(s) => s,
-            e => {
-                return Err(fred::error::RedisError::new(
-                    fred::error::RedisErrorKind::InvalidArgument,
-                    format!("Expected a string, Received: {:?}", e),
-                ))
-            }
-        };
-
-        // Deserialize the JSON string into a Session struct
-        serde_json::from_str(&json_str).map_err(|e| {
-            fred::error::RedisError::new(fred::error::RedisErrorKind::Parse, e.to_string())
-        })
-    }
 }
