@@ -5,9 +5,10 @@ use crate::algebras::redis::RedisImpl;
 use crate::types::car_data::CarData;
 use crate::types::driver::*;
 use crate::types::interval::Interval;
+use crate::types::lap::Lap;
 use crate::types::team_radio::TeamRadio;
 use async_trait::async_trait;
-use log::{debug, info};
+use log::{debug, error, info};
 use tokio::time::{self, Duration};
 
 #[async_trait]
@@ -20,6 +21,7 @@ pub trait EventSync {
     );
     async fn intervals_sync(&self, session_key: u32, maybe_interval: Option<f32>);
     async fn team_radio_sync(&self, session_key: u32, driver_number: Option<DriverNumber>);
+    async fn laps_sync(&self, session_key: u32, driver_number: &DriverNumber, lap: u32);
 }
 
 pub struct EventSyncImpl<'a> {
@@ -28,7 +30,6 @@ pub struct EventSyncImpl<'a> {
 }
 
 //TODO: return a result so we can propagate errors
-//   | |_______________^ the `?` operator cannot be applied to type `()`
 #[async_trait]
 impl EventSync for EventSyncImpl<'_> {
     async fn car_data_sync(
@@ -41,46 +42,44 @@ impl EventSync for EventSyncImpl<'_> {
         let mut counter = 0;
         loop {
             time_interval.tick().await;
-            //TODO: change logging to debug, add error logging
-            debug!("getting car data");
-            let car_data = self.api.get_car_data(session_key, driver_number, speed);
-            debug!("upserting car_data to redis");
-            let _ = car_data.clone().map(|cd| async move {
-                self.redis
-                    .set_json::<Vec<CarData>>("car_data", cd.clone())
+            let maybe_car_data = self.api.get_car_data(session_key, driver_number, speed);
+            if let Some(car_data) = maybe_car_data.clone() {
+                if let Err(car_data) = self
+                    .redis
+                    .set_json::<Vec<CarData>>("car_data", car_data.clone())
                     .await
-            });
-            let data_len = car_data.map_or(0, |vec| vec.len());
+                {
+                    error!("could not write car_data: {:?}", car_data);
+                } else {
+                    info!("car_data synced");
+                }
+            }
+            let data_len = maybe_car_data.map_or(0, |vec| vec.len());
             info!("# requests: {counter}, data len: {data_len}");
-            // println!("date, brake, n_gear, rpn, speed, drs");
-            // let _ = car_data
-            //     .expect("car data not found")
-            //     .into_iter()
-            //     .for_each(|cd: CarData| {
-            //         println!(
-            //             "{}, {}, {}, {}, {}, {}",
-            //             cd.date, cd.brake, cd.n_gear, cd.rpm, cd.speed, cd.drs
-            //         )
-            //     });
             debug!("car_data upserted");
             counter = counter + 1;
         }
     }
 
     async fn intervals_sync(&self, session_key: u32, maybe_interval: Option<f32>) {
-        let mut time_interval = time::interval(Duration::from_secs(60));
+        let mut time_interval = time::interval(Duration::from_secs(5));
         loop {
             time_interval.tick().await;
-            //TODO: change logging to debug, add error logging
-            debug!("getting intervals");
-            let intervals = self.api.get_intervals(session_key, maybe_interval);
-            debug!("upserting intervals to redis");
-            let _ = intervals.clone().map(|i| async move {
-                self.redis
-                    .set_json::<Vec<Interval>>("interval", i.clone())
+            let maybe_intervals = self.api.get_intervals(session_key, maybe_interval);
+            info!("maybe intervals: {:?}", maybe_intervals);
+            //TODO: this doesn't error or tell you when no intervals are found
+            if let Some(intervals) = maybe_intervals.clone() {
+                info!("test 1");
+                if let Err(intervals) = self
+                    .redis
+                    .set_json::<Vec<Interval>>("intervals", intervals.clone())
                     .await
-            });
-            info!("intervals synced");
+                {
+                    error!("could not Redis write intervals: {intervals}");
+                } else {
+                    info!("intervals synced");
+                }
+            }
         }
     }
 
@@ -88,16 +87,33 @@ impl EventSync for EventSyncImpl<'_> {
         let mut time_interval = time::interval(Duration::from_secs(30));
         loop {
             time_interval.tick().await;
-            //TODO: change logging to debug, add error logging
-            debug!("getting team radio");
-            let team_radio = self.api.get_team_radio(session_key, driver_number);
-            debug!("upserting team radio to redis");
-            let _ = team_radio.clone().map(|tr| async move {
-                self.redis
-                    .set_json::<Vec<TeamRadio>>("team_radio", tr.clone())
+            let maybe_team_radio = self.api.get_team_radio(session_key, driver_number);
+            if let Some(team_radio) = maybe_team_radio.clone() {
+                if let Err(team_radio) = self
+                    .redis
+                    .set_json::<Vec<TeamRadio>>("team_radio", team_radio.clone())
                     .await
-            });
-            info!("team radio synced");
+                {
+                    error!("could not Redis write team_radio: {:?}", team_radio);
+                } else {
+                    info!("team radio synced");
+                }
+            }
+        }
+    }
+
+    async fn laps_sync(&self, session_key: u32, driver_number: &DriverNumber, lap: u32) {
+        let mut time_interval = time::interval(Duration::from_secs(120));
+        loop {
+            time_interval.tick().await;
+            let maybe_laps = self.api.get_lap(session_key, driver_number, lap);
+            if let Some(laps) = maybe_laps.clone() {
+                if let Err(laps) = self.redis.set_json::<Vec<Lap>>("laps", laps.clone()).await {
+                    error!("could not write laps: {laps}");
+                } else {
+                    info!("laps synced");
+                }
+            }
         }
     }
 }

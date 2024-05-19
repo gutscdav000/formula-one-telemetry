@@ -47,17 +47,17 @@
 */
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct Lap {
     pub date_start: String, //TODO: convert to timestamp
     pub driver_number: u32,
-    pub duration_sector_1: f32,
-    pub duration_sector_2: f32,
-    pub duration_sector_3: f32,
+    pub duration_sector_1: Option<f32>,
+    pub duration_sector_2: Option<f32>,
+    pub duration_sector_3: Option<f32>,
     pub i1_speed: u32,
     pub i2_speed: u32,
     pub is_pit_out_lap: bool,
-    pub lap_duration: f32,
+    pub lap_duration: Option<f32>,
     pub lap_number: u32,
     pub meeting_key: u32,
     // Dropping these because they'll throw in a null in the array sometimes
