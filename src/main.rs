@@ -5,7 +5,6 @@ use crate::algebras::car_data_api::CarDataApiImpl;
 use crate::algebras::event_sync::EventSync;
 use crate::algebras::event_sync::EventSyncImpl;
 use crate::algebras::http_requester::TelemetryHttpRequester;
-use crate::algebras::redis::Redis;
 use crate::algebras::redis::RedisImpl;
 use crate::types::car_data::CarData;
 use crate::types::car_location::CarLocation;
@@ -37,7 +36,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         uri: "https://api.openf1.org",
     };
 
-    let redis_client: RedisImpl = setup_server().expect("unable to connect to redis");
+    let redis_client: RedisImpl = RedisImpl::default().expect("unable to connect to redis");
 
     let event_sync = EventSyncImpl {
         api: &api,
@@ -57,19 +56,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .await;
     //    info!("car data: {}", car_data);
     Ok(())
-}
-
-//TODO: rewrite this into Redis::new()
-fn setup_server() -> Result<RedisImpl, RedisError> {
-    info!("Connecting to redis");
-    let config: RedisConfig = RedisConfig::default();
-    let reconnect_policy: ReconnectPolicy = ReconnectPolicy::new_exponential(5, 1, 10, 5);
-    let client = RedisClient::new(config);
-    let _ = client.connect(Some(reconnect_policy));
-    let _ = client.wait_for_connect();
-    let redis_algebra: RedisImpl = RedisImpl { client: client };
-    info!("Connected to Redis");
-    Ok(redis_algebra)
 }
 
 fn test_requests() {

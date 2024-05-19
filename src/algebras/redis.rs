@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use core::fmt::Display;
 use fred::prelude::*;
 use fred::types::RedisKey;
-use log::error;
+use log::{error, info};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use serde_json;
@@ -24,6 +24,19 @@ pub trait Redis {
 
 pub struct RedisImpl {
     pub client: RedisClient,
+}
+impl RedisImpl {
+    pub fn default() -> Result<RedisImpl, RedisError> {
+        info!("Connecting to redis");
+        let config: RedisConfig = RedisConfig::default();
+        let reconnect_policy: ReconnectPolicy = ReconnectPolicy::new_exponential(5, 1, 10, 5);
+        let client = RedisClient::new(config);
+        let _ = client.connect(Some(reconnect_policy));
+        let _ = client.wait_for_connect();
+        let redis_algebra: RedisImpl = RedisImpl { client: client };
+        info!("Connected to Redis");
+        Ok(redis_algebra)
+    }
 }
 
 #[async_trait]
