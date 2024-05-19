@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use core::fmt::Display;
 use fred::prelude::*;
 use fred::types::RedisKey;
-use log::{error, info};
+use log::{error, info, warn};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use serde_json;
@@ -20,6 +20,11 @@ pub trait Redis {
         &self,
         key: K,
     ) -> Result<Option<V>, RedisClientError>;
+    async fn redis_fire_and_forget<V: Serialize + Send + Sync>(
+        &self,
+        maybe_value: Option<Vec<V>>,
+        redis_key: String,
+    );
 }
 
 pub struct RedisImpl {
@@ -64,6 +69,20 @@ impl Redis for RedisImpl {
         } else {
             error!("value not found for key: {}", key_log);
             Ok(None)
+        }
+    }
+
+    async fn redis_fire_and_forget<V: Serialize + Send + Sync>(
+        &self,
+        maybe_value: Option<Vec<V>>,
+        redis_key: String,
+    ) {
+        match maybe_value {
+            Some(value) => match self.set_json::<Vec<V>>(&redis_key, value).await {
+                Ok(_) => info!("{redis_key} synced"),
+                Err(e) => error!("could not Redis write {redis_key}, err: {e}"),
+            },
+            None => warn!("no {redis_key} returned from client"),
         }
     }
 }
