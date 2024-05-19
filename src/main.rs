@@ -55,7 +55,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
     //     .car_data_sync(session.session_key, Some(driver_number), Some(50))
     //     .await;
     //    info!("car data: {}", car_data);
-    let _ = event_sync.intervals_sync(session.session_key, None).await;
+    // let _ = event_sync.intervals_sync(session.session_key, None).await;
+    let _ = event_sync
+        .team_radio_sync(session.session_key, Some(driver_number))
+        .await;
     Ok(())
 }
 

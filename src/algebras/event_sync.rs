@@ -5,6 +5,7 @@ use crate::algebras::redis::RedisImpl;
 use crate::types::car_data::CarData;
 use crate::types::driver::*;
 use crate::types::interval::Interval;
+use crate::types::team_radio::TeamRadio;
 use async_trait::async_trait;
 use log::{debug, info};
 use tokio::time::{self, Duration};
@@ -18,6 +19,7 @@ pub trait EventSync {
         speed: Option<u32>,
     );
     async fn intervals_sync(&self, session_key: u32, maybe_interval: Option<f32>);
+    async fn team_radio_sync(&self, session_key: u32, driver_number: Option<DriverNumber>);
 }
 
 pub struct EventSyncImpl<'a> {
@@ -79,6 +81,23 @@ impl EventSync for EventSyncImpl<'_> {
                     .await
             });
             info!("intervals synced");
+        }
+    }
+
+    async fn team_radio_sync(&self, session_key: u32, driver_number: Option<DriverNumber>) {
+        let mut time_interval = time::interval(Duration::from_secs(30));
+        loop {
+            time_interval.tick().await;
+            //TODO: change logging to debug, add error logging
+            debug!("getting team radio");
+            let team_radio = self.api.get_team_radio(session_key, driver_number);
+            debug!("upserting team radio to redis");
+            let _ = team_radio.clone().map(|tr| async move {
+                self.redis
+                    .set_json::<Vec<TeamRadio>>("team_radio", tr.clone())
+                    .await
+            });
+            info!("team radio synced");
         }
     }
 }
