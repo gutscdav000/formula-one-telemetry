@@ -51,10 +51,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .expect("Session not found, or request timed out");
 
     let driver_number = get_driver_number(&DriverName::LandoNorris);
-    let _ = event_sync
-        .car_data_sync(session.session_key, Some(driver_number), Some(50))
-        .await;
+    // let _ = event_sync
+    //     .car_data_sync(session.session_key, Some(driver_number), Some(50))
+    //     .await;
     //    info!("car data: {}", car_data);
+    let _ = event_sync.intervals_sync(session.session_key, None).await;
     Ok(())
 }
 

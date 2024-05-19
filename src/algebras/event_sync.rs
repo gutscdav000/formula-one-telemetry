@@ -4,6 +4,7 @@ use crate::algebras::redis::Redis;
 use crate::algebras::redis::RedisImpl;
 use crate::types::car_data::CarData;
 use crate::types::driver::*;
+use crate::types::interval::Interval;
 use async_trait::async_trait;
 use log::{debug, info};
 use tokio::time::{self, Duration};
@@ -16,6 +17,7 @@ pub trait EventSync {
         driver_number: Option<DriverNumber>,
         speed: Option<u32>,
     );
+    async fn intervals_sync(&self, session_key: u32, maybe_interval: Option<f32>);
 }
 
 pub struct EventSyncImpl<'a> {
@@ -33,9 +35,10 @@ impl EventSync for EventSyncImpl<'_> {
         driver_number: Option<DriverNumber>,
         speed: Option<u32>,
     ) {
+        let mut time_interval = time::interval(Duration::from_secs(2));
         let mut counter = 0;
         loop {
-            time::interval(Duration::from_secs(2)).tick().await;
+            time_interval.tick().await;
             //TODO: change logging to debug, add error logging
             debug!("getting car data");
             let car_data = self.api.get_car_data(session_key, driver_number, speed);
@@ -59,6 +62,23 @@ impl EventSync for EventSyncImpl<'_> {
             //     });
             debug!("car_data upserted");
             counter = counter + 1;
+        }
+    }
+
+    async fn intervals_sync(&self, session_key: u32, maybe_interval: Option<f32>) {
+        let mut time_interval = time::interval(Duration::from_secs(60));
+        loop {
+            time_interval.tick().await;
+            //TODO: change logging to debug, add error logging
+            debug!("getting intervals");
+            let intervals = self.api.get_intervals(session_key, maybe_interval);
+            debug!("upserting intervals to redis");
+            let _ = intervals.clone().map(|i| async move {
+                self.redis
+                    .set_json::<Vec<Interval>>("interval", i.clone())
+                    .await
+            });
+            info!("intervals synced");
         }
     }
 }
