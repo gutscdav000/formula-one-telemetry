@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
     "throttle": 99
   },]
 */
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct CarData {
     pub brake: u32,
     pub date: String, //TODO: make timestamp

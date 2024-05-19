@@ -15,15 +15,12 @@
 use crate::types::driver::*;
 use crate::types::flag::Flag;
 use serde::{Deserialize, Serialize};
-use std::fmt;
-use std::fmt::Display;
-use std::str::FromStr;
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct RaceControl {
     pub category: Category,
-    pub date: String,                //TODO: make timestamps
-    pub driver_number: DriverNumber, //TODO: update type
+    pub date: String, //TODO: make timestamps
+    pub driver_number: DriverNumber,
     pub flag: Flag,
     pub lap_number: u32,
     pub meeting_key: u32,

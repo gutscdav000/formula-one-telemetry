@@ -5,6 +5,7 @@ use crate::algebras::car_data_api::CarDataApiImpl;
 use crate::algebras::event_sync::EventSync;
 use crate::algebras::event_sync::EventSyncImpl;
 use crate::algebras::http_requester::TelemetryHttpRequester;
+use crate::algebras::redis::RedisImpl;
 use crate::types::car_data::CarData;
 use crate::types::car_location::CarLocation;
 use crate::types::driver::*;
@@ -19,11 +20,14 @@ use crate::types::session::Session;
 use crate::types::stint::Stint;
 use crate::types::team_radio::TeamRadio;
 use crate::types::weather::Weather;
-use tokio::*;
-
+use fred::prelude::*;
+use fred::types::RedisConfig;
+use fred::types::*;
 use log::info;
+use std::error::Error;
 
-fn main() {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error>> {
     env_logger::init();
 
     let http_requester = TelemetryHttpRequester;
@@ -31,21 +35,27 @@ fn main() {
         http_requester: &http_requester,
         uri: "https://api.openf1.org",
     };
-    let event_sync = EventSyncImpl { api: &api };
+
+    let redis_client: RedisImpl = RedisImpl::default().expect("unable to connect to redis");
+
+    let event_sync = EventSyncImpl {
+        api: &api,
+        redis: &redis_client,
+    };
 
     let sessions: Option<Vec<Session>> =
-        api.get_session(&"Belgium".to_string(), &"Race".to_string(), 2023);
+        api.get_session(&"Italy".to_string(), &"Qualifying".to_string(), 2024);
     println!("Sessions: {:?}", sessions);
     let session: Session = sessions
         .and_then(|vec| vec.clone().pop())
         .expect("Session not found, or request timed out");
 
-    /*: Option<Vec<CarData>>*/
-    // let car_data = tokio::spawn(async move {
-    // 	api.get_car_data(session.session_key, None, None);
-    // });
-    let car_data = event_sync.car_data_sync(session.session_key, None, None);
+    let driver_number = get_driver_number(&DriverName::LandoNorris);
+    let _ = event_sync
+        .car_data_sync(session.session_key, Some(driver_number), Some(50))
+        .await;
     //    info!("car data: {}", car_data);
+    Ok(())
 }
 
 fn test_requests() {
