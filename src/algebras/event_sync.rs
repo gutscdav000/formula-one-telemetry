@@ -4,6 +4,7 @@ use crate::algebras::redis::Redis;
 use crate::algebras::redis::RedisImpl;
 use crate::types::car_data::CarData;
 use crate::types::driver::*;
+use crate::types::event_sync::EventSyncConfig;
 use crate::types::interval::Interval;
 use crate::types::lap::Lap;
 use crate::types::pit::Pit;
@@ -11,8 +12,7 @@ use crate::types::position::Position;
 use crate::types::stint::Stint;
 use crate::types::team_radio::TeamRadio;
 use async_trait::async_trait;
-use log::{debug, error, info, warn};
-use serde::Serialize;
+use log::{debug, info};
 use tokio::time::{self, Duration};
 
 #[async_trait]
@@ -51,9 +51,9 @@ pub trait EventSync {
 pub struct EventSyncImpl<'a> {
     pub api: &'a CarDataApiImpl<'a>,
     pub redis: &'a RedisImpl,
+    pub delay_config: &'a EventSyncConfig,
 }
 
-//TODO: return a result so we can propagate errors
 #[async_trait]
 impl EventSync for EventSyncImpl<'_> {
     //TODO: clean this up once we're finished
@@ -63,7 +63,9 @@ impl EventSync for EventSyncImpl<'_> {
         driver_number: Option<DriverNumber>,
         speed: Option<u32>,
     ) {
-        let mut time_interval = time::interval(Duration::from_secs(2));
+        let mut time_interval = time::interval(Duration::from_secs(
+            self.delay_config.car_data_duration_secs,
+        ));
         let mut counter = 0;
         loop {
             time_interval.tick().await;
@@ -86,7 +88,9 @@ impl EventSync for EventSyncImpl<'_> {
     }
 
     async fn intervals_sync(&self, session_key: u32, maybe_interval: Option<f32>) {
-        let mut time_interval = time::interval(Duration::from_secs(5));
+        let mut time_interval = time::interval(Duration::from_secs(
+            self.delay_config.interval_duration_secs,
+        ));
         loop {
             time_interval.tick().await;
             let maybe_intervals = self.api.get_intervals(session_key, maybe_interval);
@@ -101,7 +105,9 @@ impl EventSync for EventSyncImpl<'_> {
     }
 
     async fn team_radio_sync(&self, session_key: u32, driver_number: Option<DriverNumber>) {
-        let mut time_interval = time::interval(Duration::from_secs(30));
+        let mut time_interval = time::interval(Duration::from_secs(
+            self.delay_config.team_radio_duration_secs,
+        ));
         loop {
             time_interval.tick().await;
             let maybe_team_radio = self.api.get_team_radio(session_key, driver_number);
@@ -116,7 +122,8 @@ impl EventSync for EventSyncImpl<'_> {
     }
 
     async fn laps_sync(&self, session_key: u32, driver_number: &DriverNumber, lap: u32) {
-        let mut time_interval = time::interval(Duration::from_secs(120));
+        let mut time_interval =
+            time::interval(Duration::from_secs(self.delay_config.laps_duration_secs));
         loop {
             time_interval.tick().await;
             let maybe_laps = self.api.get_lap(session_key, driver_number, lap);
@@ -128,7 +135,8 @@ impl EventSync for EventSyncImpl<'_> {
     }
 
     async fn pit_sync(&self, session_key: u32, pit_duration: Option<u32>) {
-        let mut time_interval = time::interval(Duration::from_secs(120));
+        let mut time_interval =
+            time::interval(Duration::from_secs(self.delay_config.pit_duration_secs));
         loop {
             time_interval.tick().await;
             let maybe_pits = self.api.get_pit(session_key, pit_duration);
@@ -145,7 +153,9 @@ impl EventSync for EventSyncImpl<'_> {
         driver_number: &DriverNumber,
         position: Option<u32>,
     ) {
-        let mut time_interval = time::interval(Duration::from_secs(5));
+        let mut time_interval = time::interval(Duration::from_secs(
+            self.delay_config.position_duration_secs,
+        ));
         loop {
             time_interval.tick().await;
             let maybe_position = self.api.get_position(meeting_key, driver_number, position);
@@ -160,7 +170,8 @@ impl EventSync for EventSyncImpl<'_> {
     }
 
     async fn stints_sync(&self, session_key: u32, tyre_age: Option<u32>) {
-        let mut time_interval = time::interval(Duration::from_secs(120));
+        let mut time_interval =
+            time::interval(Duration::from_secs(self.delay_config.stints_duration_secs));
         loop {
             time_interval.tick().await;
             let maybe_stints = self.api.get_stints(session_key, tyre_age);

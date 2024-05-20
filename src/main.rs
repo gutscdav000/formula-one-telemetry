@@ -6,24 +6,9 @@ use crate::algebras::event_sync::EventSync;
 use crate::algebras::event_sync::EventSyncImpl;
 use crate::algebras::http_requester::TelemetryHttpRequester;
 use crate::algebras::redis::RedisImpl;
-use crate::types::car_data::CarData;
-use crate::types::car_location::CarLocation;
 use crate::types::driver::*;
-use crate::types::flag::*;
-use crate::types::interval::Interval;
-use crate::types::lap::Lap;
-use crate::types::meeting::Meeting;
-use crate::types::pit::Pit;
-use crate::types::position::Position;
-use crate::types::race_controls::*;
+use crate::types::event_sync::EventSyncConfig;
 use crate::types::session::Session;
-use crate::types::stint::Stint;
-use crate::types::team_radio::TeamRadio;
-use crate::types::weather::Weather;
-use fred::prelude::*;
-use fred::types::RedisConfig;
-use fred::types::*;
-use log::info;
 use std::error::Error;
 
 #[tokio::main]
@@ -38,9 +23,19 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let redis_client: RedisImpl = RedisImpl::default().expect("unable to connect to redis");
 
+    let event_sync_delay_config = EventSyncConfig {
+        car_data_duration_secs: 2,
+        interval_duration_secs: 5,
+        team_radio_duration_secs: 30,
+        laps_duration_secs: 120,
+        pit_duration_secs: 120,
+        position_duration_secs: 5, //TODO: probably higher if we're not using this...
+        stints_duration_secs: 120,
+    };
     let event_sync = EventSyncImpl {
         api: &api,
         redis: &redis_client,
+        delay_config: &event_sync_delay_config,
     };
 
     let sessions: Option<Vec<Session>> =

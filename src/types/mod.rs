@@ -1,6 +1,7 @@
 pub mod car_data;
 pub mod car_location;
 pub mod driver;
+pub mod event_sync;
 pub mod flag;
 pub mod interval;
 pub mod lap;
