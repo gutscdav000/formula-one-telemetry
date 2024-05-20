@@ -12,7 +12,7 @@
 */
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct Interval {
     pub gap_to_leader: Option<f32>,
     pub interval: Option<f32>,

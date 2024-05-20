@@ -9,7 +9,7 @@
  */
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Clone, Deserialize, PartialEq, Debug)]
 pub struct TeamRadio {
     pub date: String, //TODO: replace with timestamp
     pub driver_number: u32,
