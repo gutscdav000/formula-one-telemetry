@@ -18,7 +18,7 @@ mod tests {
             driver_number: 63,
             lap_number: 5,
             meeting_key: 1219,
-            pit_duration: 24.5,
+            pit_duration: Some(24.5),
             session_key: 9158,
         }];
 

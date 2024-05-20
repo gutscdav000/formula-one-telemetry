@@ -36,7 +36,6 @@ mod tests {
             },
         ];
 
-        let car_loc_driver = get_driver_number(&DriverName::OscarPiastri);
         let car_locations: Option<Vec<CarLocation>> = API.get_car_location(
             9161,
             &driver_number,
