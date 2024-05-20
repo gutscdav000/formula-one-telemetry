@@ -34,6 +34,18 @@ pub trait EventSync {
         position: Option<u32>,
     );
     async fn stints_sync(&self, session_key: u32, tyre_age: Option<u32>);
+    async fn run_sync(
+        &self,
+        session_key: u32,
+        meeting_key: u32,
+        speed: Option<u32>,
+        maybe_interval: Option<f32>,
+        driver_number: DriverNumber,
+        lap: u32,
+        pit_duration: Option<u32>,
+        position: Option<u32>,
+        tyre_age: Option<u32>,
+    );
 }
 
 pub struct EventSyncImpl<'a> {
@@ -157,5 +169,34 @@ impl EventSync for EventSyncImpl<'_> {
                 .redis_fire_and_forget::<Stint>(maybe_stints.clone(), String::from("stints"))
                 .await;
         }
+    }
+
+    async fn run_sync(
+        &self,
+        session_key: u32,
+        meeting_key: u32,
+        speed: Option<u32>,
+        maybe_interval: Option<f32>,
+        driver_number: DriverNumber,
+        lap: u32,
+        pit_duration: Option<u32>,
+        position: Option<u32>,
+        tyre_age: Option<u32>,
+    ) {
+        tokio_scoped::scope(|scope| {
+            scope.spawn(async move {
+                tokio::select! {
+                        _ = self.car_data_sync(session_key, Some(driver_number), speed) => {},
+                        _ = self.intervals_sync(session_key, maybe_interval) => {},
+                // We want to sync all team radio, not by driver
+                        _ = self.team_radio_sync(session_key, None) => {},
+                //TODO: Research required: lap could cause issues, depending on value provided.
+                        _ = self.laps_sync(session_key, &driver_number, lap) => {},
+                        _ = self.pit_sync(session_key, pit_duration) => {},
+                        _ = self.position_sync(meeting_key, &driver_number, position) => {},
+                        _ = self.stints_sync(session_key, tyre_age) => {},
+                    }
+            });
+        });
     }
 }
