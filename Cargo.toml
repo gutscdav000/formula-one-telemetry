@@ -17,3 +17,16 @@ serde = { version = "1.0.199", features = ["derive"] }
 serde_json = "1.0.116"
 tokio = { version = "1.37.0", features = ["full"] }
 tokio-scoped = "0.2.0"
+# old ws #TODO: delete
+#tokio-tungstenite = "0.15"
+#futures-util = "0.3"
+#hyper = { version = "0.14", features = ["full"] } # perhaps just server
+# new WS
+chrono = { version = "0.4", features = ["serde"] }
+socketioxide = "0.8"
+# tokio = {version = "1", features = ["full"]}
+tracing = "0.1"
+tracing-subscriber = "0.3"
+axum = "0.6" # new 0.7 has breaking changes
+tower-http = {version = "0.4", features = ["cors"]}
+tower = "0.4"
