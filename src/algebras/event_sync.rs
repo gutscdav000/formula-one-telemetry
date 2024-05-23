@@ -5,6 +5,7 @@ use crate::algebras::redis::RedisImpl;
 use crate::types::car_data::CarData;
 use crate::types::driver::*;
 use crate::types::event_sync::EventSyncConfig;
+use crate::types::events::Events;
 use crate::types::interval::Interval;
 use crate::types::lap::Lap;
 use crate::types::pit::Pit;
@@ -12,7 +13,8 @@ use crate::types::position::Position;
 use crate::types::stint::Stint;
 use crate::types::team_radio::TeamRadio;
 use async_trait::async_trait;
-use log::{debug, info};
+use log::{debug, error, info};
+use tokio::sync::broadcast::Sender;
 use tokio::time::{self, Duration};
 
 #[async_trait]
@@ -52,6 +54,7 @@ pub struct EventSyncImpl<'a> {
     pub api: &'a CarDataApiImpl<'a>,
     pub redis: &'a RedisImpl,
     pub delay_config: &'a EventSyncConfig,
+    pub tx: Sender<Events>,
 }
 
 #[async_trait]
@@ -80,6 +83,9 @@ impl EventSync for EventSyncImpl<'_> {
                     )),
                 )
                 .await;
+            if let Err(e) = self.tx.send(Events::CarData) {
+                error!("failed to send Events message: {e}");
+            }
             let data_len = maybe_car_data.map_or(0, |vec| vec.len());
             info!("# requests: {counter}, data len: {data_len}");
             debug!("car_data upserted");
