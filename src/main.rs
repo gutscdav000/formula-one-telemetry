@@ -5,38 +5,25 @@ use crate::algebras::car_data_api::CarDataApiImpl;
 use crate::algebras::event_sync::EventSync;
 use crate::algebras::event_sync::EventSyncImpl;
 use crate::algebras::http_requester::TelemetryHttpRequester;
-use crate::algebras::redis::Redis;
 use crate::algebras::redis::RedisImpl;
-use crate::types::car_data::CarData;
+use crate::algebras::websocket::Websocket;
+use crate::algebras::websocket::WebsocketImpl;
 use crate::types::driver::*;
 use crate::types::event_sync::EventSyncConfig;
 use crate::types::events::Events;
 use crate::types::session::Session;
-use log::{error, warn};
 use std::error::Error;
-
-//WS
-use axum::routing::get;
-use serde_json::Value;
-use socketioxide::extract::{Data, SocketRef};
-use socketioxide::SocketIo;
-use tower::ServiceBuilder;
-use tower_http::cors::CorsLayer;
-use tracing::info;
-use tracing_subscriber::FmtSubscriber;
-// Channel
-use std::any::Any;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 use tokio::sync::broadcast;
-use tokio::time;
+use tracing::info;
+use tracing_subscriber::FmtSubscriber;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     env_logger::init();
 
-    //let uri: &'static str = "https://api.openf1.org";
     let uri: &'static str = Box::leak(Box::new(String::from("https://api.openf1.org"))).as_str();
     let http_requester: &'static TelemetryHttpRequester = &TelemetryHttpRequester;
     let api: &'static CarDataApiImpl = Box::leak(Box::new(CarDataApiImpl {
@@ -55,7 +42,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let redis_client: &'static RedisImpl = Box::leak(Box::new(
         RedisImpl::default().expect("unable to connect to redis"),
     ));
-    let (channel_tx, mut channel_rx) = broadcast::channel::<Events>(100);
+    let (channel_tx, _) = broadcast::channel::<Events>(100);
 
     let event_sync_delay_config: &'static EventSyncConfig = &EventSyncConfig {
         car_data_duration_secs: 2,
@@ -88,81 +75,17 @@ async fn main() -> Result<(), Box<dyn Error>> {
             )
             .await;
     });
+    // this is here to give the event_sync a moment to populate the cache
     thread::sleep(Duration::from_millis(5000));
-    error!("AFTER EVENT SYNC");
 
-    // WEB SOCKETS
+    info!("Begin Websocket streaming");
     // TODO: is this for logging or tracing too?
     tracing::subscriber::set_global_default(FmtSubscriber::default())?;
-
-    //Channel
-    let (socket_tx, mut socket_rx) = broadcast::channel::<String>(100);
-
-    // Clone the sender for the interval task
-    let channel_tx_clone = channel_tx.clone();
-
-    // Spawn a task to send messages every 2 seconds
-    tokio::spawn(async move {
-        let mut interval = time::interval(Duration::from_secs(2));
-        loop {
-            interval.tick().await;
-            if let Err(e) = channel_tx_clone.send(Events::Session) {
-                eprintln!("Error sending message: {}", e);
-            }
-        }
-    });
-
-    let (layer, io) = SocketIo::new_layer();
-    io.ns("/", move |socket: SocketRef| {
-        let socket_tx_clone = socket_tx.clone();
-        tokio_scoped::scope(|scope| {
-            scope.spawn(async move {
-                on_connect(
-                    &redis_client.clone(),
-                    socket,
-                    //socket_tx_clone,
-                    channel_tx,
-                )
-                .await;
-            });
-        });
-    });
-    let app = axum::Router::new()
-        .route("/", get(|| async { "pong" }))
-        .layer(
-            ServiceBuilder::new()
-                .layer(CorsLayer::permissive())
-                .layer(layer),
-        );
-    info!("starting server");
-
-    axum::Server::bind(&"127.0.0.1:3000".parse().unwrap())
-        .serve(app.into_make_service())
-        .await?;
+    let _ = Arc::new(WebsocketImpl {
+        redis_client: Arc::new(redis_client.clone()),
+    })
+    .run(channel_tx)
+    .await;
 
     Ok(())
-}
-
-async fn on_connect(
-    redis_client: &RedisImpl,
-    socket: SocketRef,
-    //socket_tx: broadcast::Sender<T>,
-    channel_tx: broadcast::Sender<Events>,
-) {
-    info!("socket connected: {}", socket.id);
-
-    let mut rx = channel_tx.subscribe();
-    let result_json = redis_client
-        .get_json::<Vec<CarData>, String>("car_data:4".to_string())
-        .await;
-    error!("RESULT: {:?}", result_json);
-    let json = result_json.ok().flatten().unwrap();
-
-    tokio::spawn(async move {
-        while let Ok(message) = rx.recv().await {
-            info!("Emitting message: {:?}", message);
-            let _ = socket.emit(format!("{:?}", message), &json);
-            //let _ = socket.emit("message", "Hello world".to_string());
-        }
-    });
 }
