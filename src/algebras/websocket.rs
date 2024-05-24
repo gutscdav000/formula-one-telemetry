@@ -19,7 +19,8 @@ pub trait Websocket {
         self: Arc<Self>,
         channel_tx: broadcast::Sender<Events>,
     ) -> Result<(), Box<dyn Error>>;
-    async fn on_connect(&self, socket: SocketRef, channel_tx: broadcast::Sender<Events>);
+    async fn route_event(self: Arc<Self>, event: &Events) -> String;
+    async fn on_connect(self: Arc<Self>, socket: SocketRef, channel_tx: broadcast::Sender<Events>);
 }
 pub struct WebsocketImpl {
     pub redis_client: Arc<RedisImpl>,
@@ -55,21 +56,42 @@ impl Websocket for WebsocketImpl {
         Ok(())
     }
 
-    async fn on_connect(&self, socket: SocketRef, channel_tx: broadcast::Sender<Events>) {
+    //TODO: Is there a better way to separate concerns than including this in the algebra?
+    //      One option is to send json through the channel from event_sync... probably has a performance overhead
+    //    could we have 2 implementations? 1) redis, 2) send json by channel?
+    //    define common methods in the trait, and 2 separate impls for methods that diverge
+    async fn route_event(self: Arc<Self>, event: &Events) -> String {
+        match event {
+            Events::CarData => {
+                error!("ROUTING EVENT");
+
+                //TODO: this is hot garbage fix it...
+                let cd = self
+                    .redis_client
+                    .get_json::<Vec<CarData>, String>("car_data:4".to_string())
+                    .await
+                    .ok()
+                    .flatten()
+                    .unwrap();
+
+                //TODO: separation of concerns, could a trait be made for CarData and associated types
+                serde_json::to_string(&cd).unwrap()
+            }
+            _ => "".to_string(),
+        }
+    }
+
+    async fn on_connect(self: Arc<Self>, socket: SocketRef, channel_tx: broadcast::Sender<Events>) {
         info!("socket connected: {}", socket.id);
 
         let mut rx = channel_tx.subscribe();
-        let result_json = self
-            .redis_client
-            .get_json::<Vec<CarData>, String>("car_data:4".to_string())
-            .await;
-        error!("RESULT: {:?}", result_json);
-        let json = result_json.ok().flatten().unwrap();
 
         tokio::spawn(async move {
             while let Ok(message) = rx.recv().await {
+                let s = self.clone().route_event(&message).await;
                 info!("Emitting message: {:?}", message);
-                let _ = socket.emit(format!("{:?}", message), &json);
+                //let _ = socket.emit(format!("{:?}", message), &json);
+                let _ = socket.emit(format!("{:?}", message), &s);
             }
         });
     }
