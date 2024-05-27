@@ -45,6 +45,7 @@
     "st_speed": 298
   }
 */
+use crate::types::events::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
@@ -67,4 +68,10 @@ pub struct Lap {
     //    pub segments_sector_3: Vec<u32>,
     pub session_key: u32,
     pub st_speed: u32,
+}
+
+impl EventData for Lap {
+    fn get_type() -> Events {
+        Events::Lap
+    }
 }

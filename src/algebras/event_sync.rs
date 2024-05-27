@@ -1,11 +1,12 @@
 use crate::algebras::car_data_api::CarDataApi;
 use crate::algebras::car_data_api::CarDataApiImpl;
+use crate::algebras::channel_queue::*;
 use crate::algebras::redis::Redis;
 use crate::algebras::redis::RedisImpl;
 use crate::types::car_data::CarData;
 use crate::types::driver::*;
 use crate::types::event_sync::EventSyncConfig;
-use crate::types::events::Events;
+use crate::types::events::*;
 use crate::types::interval::Interval;
 use crate::types::lap::Lap;
 use crate::types::pit::Pit;
@@ -13,7 +14,10 @@ use crate::types::position::Position;
 use crate::types::stint::Stint;
 use crate::types::team_radio::TeamRadio;
 use async_trait::async_trait;
-use log::{debug, error, info};
+use log::error;
+use serde::Serialize;
+use std::fmt::Debug;
+use std::sync::Arc;
 use tokio::sync::broadcast::Sender;
 use tokio::time::{self, Duration};
 
@@ -35,9 +39,9 @@ pub trait EventSync {
         driver_number: &DriverNumber,
         position: Option<u32>,
     );
-    async fn stints_sync(&self, session_key: u32, tyre_age: Option<u32>);
+    async fn stints_sync(self: Arc<Self>, session_key: u32, tyre_age: Option<u32>);
     async fn run_sync(
-        &self,
+        self: Arc<Self>,
         session_key: u32,
         meeting_key: u32,
         speed: Option<u32>,
@@ -54,12 +58,11 @@ pub struct EventSyncImpl<'a> {
     pub api: &'a CarDataApiImpl<'a>,
     pub redis: &'a RedisImpl,
     pub delay_config: &'a EventSyncConfig,
-    pub tx: Sender<Events>,
+    pub tx: Arc<dyn ChannelQueue>,
 }
 
 #[async_trait]
 impl EventSync for EventSyncImpl<'_> {
-    //TODO: clean this up once we're finished
     async fn car_data_sync(
         &self,
         session_key: u32,
@@ -69,7 +72,6 @@ impl EventSync for EventSyncImpl<'_> {
         let mut time_interval = time::interval(Duration::from_secs(
             self.delay_config.car_data_duration_secs,
         ));
-        let mut counter = 0;
         loop {
             time_interval.tick().await;
             let maybe_car_data = self.api.get_car_data(session_key, driver_number, speed);
@@ -83,14 +85,17 @@ impl EventSync for EventSyncImpl<'_> {
                     )),
                 )
                 .await;
-            //TODO: is this the best error handling?
-            if let Err(e) = self.tx.send(Events::CarData) {
-                error!("failed to send Events message: {e}");
+            //TODO: this was for sending Events
+            // if let Err(e) = self.tx.send(Events::CarData) {
+            //     error!("failed to send Events message: {e}");
+            // }
+            let v: Vec<dyn EventData> =
+                maybe_car_data.unwrap_or(Vec::<CarData>::new()) as Vec<dyn EventData>;
+            if !v.is_empty() {
+                if let Err(e) = self.tx.send(Message::<dyn EventData> { value: v }) {
+                    error!("failed to send Events message: {e}");
+                }
             }
-            let data_len = maybe_car_data.map_or(0, |vec| vec.len());
-            info!("# requests: {counter}, data len: {data_len}");
-            debug!("car_data upserted");
-            counter = counter + 1;
         }
     }
 
@@ -176,7 +181,7 @@ impl EventSync for EventSyncImpl<'_> {
         }
     }
 
-    async fn stints_sync(&self, session_key: u32, tyre_age: Option<u32>) {
+    async fn stints_sync(self: Arc<Self>, session_key: u32, tyre_age: Option<u32>) {
         let mut time_interval =
             time::interval(Duration::from_secs(self.delay_config.stints_duration_secs));
         loop {
@@ -190,7 +195,7 @@ impl EventSync for EventSyncImpl<'_> {
     }
 
     async fn run_sync(
-        &self,
+        self: Arc<Self>,
         session_key: u32,
         meeting_key: u32,
         speed: Option<u32>,
@@ -201,17 +206,18 @@ impl EventSync for EventSyncImpl<'_> {
         position: Option<u32>,
         tyre_age: Option<u32>,
     ) {
+        let self_clone = Arc::clone(&self);
         tokio_scoped::scope(|scope| {
             scope.spawn(async move {
                 tokio::select! {
-                        _ = self.car_data_sync(session_key, Some(driver_number), speed) => {},
-                        _ = self.intervals_sync(session_key, maybe_interval) => {},
+                        _ = self_clone.car_data_sync(session_key, Some(driver_number), speed) => {},
+                        _ = self_clone.intervals_sync(session_key, maybe_interval) => {},
                 // We want to sync all team radio, not by driver
-                        _ = self.team_radio_sync(session_key, None) => {},
+                        _ = self_clone.team_radio_sync(session_key, None) => {},
                 //TODO: Research required: lap could cause issues, depending on value provided.
-                        _ = self.laps_sync(session_key, &driver_number, lap) => {},
-                        _ = self.pit_sync(session_key, pit_duration) => {},
-                        _ = self.position_sync(meeting_key, &driver_number, position) => {},
+                        _ = self_clone.laps_sync(session_key, &driver_number, lap) => {},
+                        _ = self_clone.pit_sync(session_key, pit_duration) => {},
+                        _ = self_clone.position_sync(meeting_key, &driver_number, position) => {},
                         _ = self.stints_sync(session_key, tyre_age) => {},
                     }
             });

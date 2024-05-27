@@ -2,6 +2,7 @@ pub mod algebras;
 pub mod types;
 use crate::algebras::car_data_api::CarDataApi;
 use crate::algebras::car_data_api::CarDataApiImpl;
+use crate::algebras::channel_queue::*;
 use crate::algebras::event_sync::EventSync;
 use crate::algebras::event_sync::EventSyncImpl;
 use crate::algebras::http_requester::TelemetryHttpRequester;
@@ -42,7 +43,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let redis_client: &'static RedisImpl = Box::leak(Box::new(
         RedisImpl::default().expect("unable to connect to redis"),
     ));
-    let (channel_tx, _) = broadcast::channel::<Events>(100);
+    let (channel_tx, _) = broadcast::channel::<Message<EventData>>(100);
+    // was Message && Message < EventData >
+    let channel_queue =
+        ChannelQueueImpl <EventData> { SomeStruct { tx: channel_tx } };
 
     let event_sync_delay_config: &'static EventSyncConfig = &EventSyncConfig {
         car_data_duration_secs: 2,
@@ -84,7 +88,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let _ = Arc::new(WebsocketImpl {
         redis_client: Arc::new(redis_client.clone()),
     })
-    .run(channel_tx)
+    .run(channel_queue)
     .await;
 
     Ok(())

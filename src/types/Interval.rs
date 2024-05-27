@@ -10,6 +10,7 @@
   }
 ]
 */
+use crate::types::events::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
@@ -20,4 +21,10 @@ pub struct Interval {
     pub date: String, //TODO: make this a timestamp
     pub session_key: u32,
     pub meeting_key: u32,
+}
+
+impl EventData for Interval {
+    fn get_type() -> Events {
+        Events::Interval
+    }
 }

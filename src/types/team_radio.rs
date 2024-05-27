@@ -7,6 +7,7 @@
   "session_key": 9158
 }
  */
+use crate::types::events::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Clone, Deserialize, PartialEq, Debug)]
@@ -16,4 +17,10 @@ pub struct TeamRadio {
     pub meeting_key: u32,
     pub recording_url: String,
     pub session_key: u32,
+}
+
+impl EventData for TeamRadio {
+    fn get_type() -> Events {
+        Events::TeamRadio
+    }
 }

@@ -10,6 +10,7 @@
    "tyre_age_at_start": 3
  }
 */
+use crate::types::events::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
@@ -22,4 +23,10 @@ pub struct Stint {
     pub session_key: u32,
     pub stint_number: u32,
     pub tyre_age_at_start: u32,
+}
+
+impl EventData for Stint {
+    fn get_type() -> Events {
+        Events::Stint
+    }
 }
