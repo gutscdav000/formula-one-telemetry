@@ -2,6 +2,7 @@ pub mod algebras;
 pub mod types;
 use crate::algebras::car_data_api::CarDataApi;
 use crate::algebras::car_data_api::CarDataApiImpl;
+use crate::algebras::channel_queue::*;
 use crate::algebras::event_sync::EventSync;
 use crate::algebras::event_sync::EventSyncImpl;
 use crate::algebras::http_requester::TelemetryHttpRequester;
@@ -9,8 +10,8 @@ use crate::algebras::redis::RedisImpl;
 use crate::algebras::websocket::Websocket;
 use crate::algebras::websocket::WebsocketImpl;
 use crate::types::driver::*;
+use crate::types::event::Event;
 use crate::types::event_sync::EventSyncConfig;
-use crate::types::events::Events;
 use crate::types::session::Session;
 use std::error::Error;
 use std::sync::Arc;
@@ -42,7 +43,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let redis_client: &'static RedisImpl = Box::leak(Box::new(
         RedisImpl::default().expect("unable to connect to redis"),
     ));
-    let (channel_tx, _) = broadcast::channel::<Events>(100);
+    let (channel_tx, _) = broadcast::channel::<Message>(100);
+    let channel_queue = Arc::new(ChannelQueueImpl { tx: channel_tx });
 
     let event_sync_delay_config: &'static EventSyncConfig = &EventSyncConfig {
         car_data_duration_secs: 2,
@@ -57,7 +59,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         api: &api,
         redis: &redis_client,
         delay_config: &event_sync_delay_config,
-        tx: channel_tx.clone(),
+        tx: channel_queue.clone(),
     };
 
     tokio::spawn(async move {
@@ -84,7 +86,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let _ = Arc::new(WebsocketImpl {
         redis_client: Arc::new(redis_client.clone()),
     })
-    .run(channel_tx)
+    .run(channel_queue)
     .await;
 
     Ok(())

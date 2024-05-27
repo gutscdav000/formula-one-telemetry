@@ -1,11 +1,12 @@
 use crate::algebras::car_data_api::CarDataApi;
 use crate::algebras::car_data_api::CarDataApiImpl;
+use crate::algebras::channel_queue::*;
 use crate::algebras::redis::Redis;
 use crate::algebras::redis::RedisImpl;
 use crate::types::car_data::CarData;
 use crate::types::driver::*;
+use crate::types::event::Event;
 use crate::types::event_sync::EventSyncConfig;
-use crate::types::events::Events;
 use crate::types::interval::Interval;
 use crate::types::lap::Lap;
 use crate::types::pit::Pit;
@@ -14,6 +15,7 @@ use crate::types::stint::Stint;
 use crate::types::team_radio::TeamRadio;
 use async_trait::async_trait;
 use log::{debug, error, info};
+use std::sync::Arc;
 use tokio::sync::broadcast::Sender;
 use tokio::time::{self, Duration};
 
@@ -54,7 +56,7 @@ pub struct EventSyncImpl<'a> {
     pub api: &'a CarDataApiImpl<'a>,
     pub redis: &'a RedisImpl,
     pub delay_config: &'a EventSyncConfig,
-    pub tx: Sender<Events>,
+    pub tx: Arc<dyn ChannelQueue>,
 }
 
 #[async_trait]
@@ -69,7 +71,6 @@ impl EventSync for EventSyncImpl<'_> {
         let mut time_interval = time::interval(Duration::from_secs(
             self.delay_config.car_data_duration_secs,
         ));
-        let mut counter = 0;
         loop {
             time_interval.tick().await;
             let maybe_car_data = self.api.get_car_data(session_key, driver_number, speed);
@@ -84,13 +85,11 @@ impl EventSync for EventSyncImpl<'_> {
                 )
                 .await;
             //TODO: is this the best error handling?
-            if let Err(e) = self.tx.send(Events::CarData) {
+            if let Err(e) = self.tx.send(Message {
+                msg: Event::CarData,
+            }) {
                 error!("failed to send Events message: {e}");
             }
-            let data_len = maybe_car_data.map_or(0, |vec| vec.len());
-            info!("# requests: {counter}, data len: {data_len}");
-            debug!("car_data upserted");
-            counter = counter + 1;
         }
     }
 
