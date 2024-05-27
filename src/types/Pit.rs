@@ -8,6 +8,7 @@
     "session_key": 9158
   },
 */
+use crate::types::events::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
@@ -18,4 +19,10 @@ pub struct Pit {
     pub meeting_key: u32,
     pub pit_duration: Option<f32>,
     pub session_key: u32,
+}
+
+impl EventData for Pit {
+    fn get_type() -> Events {
+        Events::Pit
+    }
 }

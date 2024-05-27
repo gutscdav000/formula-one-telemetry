@@ -7,6 +7,7 @@
     "session_key": 9144
   },
 */
+use crate::types::events::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
@@ -16,4 +17,10 @@ pub struct Position {
     pub meeting_key: u32,
     pub position: u32,
     pub session_key: u32,
+}
+
+impl EventData for Position {
+    fn get_type() -> Events {
+        Events::Position
+    }
 }

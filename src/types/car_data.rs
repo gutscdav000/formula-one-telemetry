@@ -1,3 +1,4 @@
+use crate::types::events::*;
 use serde::{Deserialize, Serialize};
 /**
   [{
@@ -25,4 +26,10 @@ pub struct CarData {
     pub session_key: u32,
     pub speed: u32,
     pub throttle: u32,
+}
+
+impl EventData for CarData {
+    fn get_type() -> Events {
+        Events::CarData
+    }
 }

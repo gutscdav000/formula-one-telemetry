@@ -1,3 +1,4 @@
+use crate::types::events::*;
 /**
 [
   {
@@ -36,4 +37,10 @@ pub struct Session {
     pub session_name: String,
     pub session_type: String,
     pub year: u32,
+}
+
+impl EventData for Session {
+    fn get_type() -> Events {
+        Events::Session
+    }
 }
