@@ -84,12 +84,12 @@ impl EventSync for EventSyncImpl<'_> {
                     )),
                 )
                 .await;
-            //TODO: is this the best error handling?
-            if let Err(e) = self.tx.send(Message {
-                msg: Event::CarData,
-            }) {
-                error!("failed to send Events message: {e}");
-            }
+            self.tx
+                .send(Message {
+                    msg: Event::CarData,
+                })
+                .err()
+                .map(|e| error!("failed to send Events message: {e}"));
         }
     }
 

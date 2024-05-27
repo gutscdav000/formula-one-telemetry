@@ -3,6 +3,7 @@ use crate::algebras::redis::Redis;
 use crate::algebras::redis::RedisImpl;
 use crate::types::car_data::CarData;
 use crate::types::event::Event;
+use crate::types::redis::RedisClientError;
 use crate::types::to_json::ToJson;
 use async_trait::async_trait;
 use axum::routing::get;
@@ -64,13 +65,11 @@ impl Websocket for WebsocketImpl {
     async fn route_event(self: Arc<Self>, msg: &Message) -> Option<String> {
         let event: &Event = &msg.msg;
         match event {
-            Event::CarData => self
-                .redis_client
-                .get_json::<Vec<CarData>, String>("car_data:4".to_string())
-                .await
-                .ok()
-                .flatten()
-                .and_then(|cd| cd.to_json()),
+            Event::CarData => parse_redis_result::<Vec<CarData>>(
+                self.redis_client
+                    .get_json::<Vec<CarData>, String>("car_data:4".to_string())
+                    .await,
+            ),
             _ => None,
         }
     }
@@ -93,4 +92,8 @@ impl Websocket for WebsocketImpl {
             }
         });
     }
+}
+
+fn parse_redis_result<T: ToJson>(result: Result<Option<T>, RedisClientError>) -> Option<String> {
+    result.ok().flatten().and_then(|t| t.to_json())
 }
