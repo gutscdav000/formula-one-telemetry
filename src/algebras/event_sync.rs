@@ -84,12 +84,7 @@ impl EventSync for EventSyncImpl<'_> {
                     )),
                 )
                 .await;
-            self.tx
-                .send(Message {
-                    msg: Event::CarData,
-                })
-                .err()
-                .map(|e| error!("failed to send Events message: {e}"));
+            self.tx.fireAndForget(Event::CarData);
         }
     }
 

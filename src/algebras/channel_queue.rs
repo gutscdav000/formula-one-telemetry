@@ -1,4 +1,5 @@
 use crate::types::event::*;
+use log::error;
 use std::clone::Clone;
 use tokio::sync::broadcast::error::SendError;
 use tokio::sync::broadcast::*;
@@ -10,6 +11,7 @@ use tokio::sync::broadcast::*;
 pub trait ChannelQueue: Send + Sync {
     fn send(&self, value: Message) -> Result<usize, SendError<Message>>;
     fn subscribe(&self) -> Receiver<Message>;
+    fn fireAndForget(&self, event: Event);
 }
 
 #[derive(Clone, Debug)]
@@ -27,5 +29,12 @@ impl ChannelQueue for ChannelQueueImpl {
 
     fn subscribe(&self) -> Receiver<Message> {
         self.tx.subscribe()
+    }
+
+    fn fireAndForget(&self, event: Event) {
+        self.tx
+            .send(Message { msg: event })
+            .err()
+            .map(|e| error!("failed to send Events message: {e}"));
     }
 }
