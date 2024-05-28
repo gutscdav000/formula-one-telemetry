@@ -11,7 +11,7 @@ use tokio::sync::broadcast::*;
 pub trait ChannelQueue: Send + Sync {
     fn send(&self, value: Message) -> Result<usize, SendError<Message>>;
     fn subscribe(&self) -> Receiver<Message>;
-    fn fireAndForget(&self, event: Event);
+    fn fire_and_forget(&self, event: Event);
 }
 
 #[derive(Clone, Debug)]
@@ -31,7 +31,7 @@ impl ChannelQueue for ChannelQueueImpl {
         self.tx.subscribe()
     }
 
-    fn fireAndForget(&self, event: Event) {
+    fn fire_and_forget(&self, event: Event) {
         self.tx
             .send(Message { msg: event })
             .err()

@@ -84,7 +84,7 @@ impl EventSync for EventSyncImpl<'_> {
                     )),
                 )
                 .await;
-            self.tx.fireAndForget(Event::CarData);
+            //            self.tx.fire_and_forget(Event::CarData);
         }
     }
 
@@ -102,6 +102,7 @@ impl EventSync for EventSyncImpl<'_> {
                     String::from("intervals"),
                 )
                 .await;
+            self.tx.fire_and_forget(Event::Interval);
         }
     }
 
