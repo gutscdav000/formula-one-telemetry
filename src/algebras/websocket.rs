@@ -4,6 +4,9 @@ use crate::algebras::redis::RedisImpl;
 use crate::types::car_data::CarData;
 use crate::types::event::Event;
 use crate::types::interval::Interval;
+use crate::types::lap::Lap;
+use crate::types::pit::Pit;
+use crate::types::position::Position;
 use crate::types::redis::RedisClientError;
 use crate::types::to_json::ToJson;
 use async_trait::async_trait;
@@ -74,6 +77,21 @@ impl Websocket for WebsocketImpl {
             Event::Interval => parse_redis_result::<Vec<Interval>>(
                 self.redis_client
                     .get_json::<Vec<Interval>, String>("intervals".to_string())
+                    .await,
+            ),
+            Event::Lap => parse_redis_result::<Vec<Lap>>(
+                self.redis_client
+                    .get_json::<Vec<Lap>, String>("laps".to_string())
+                    .await,
+            ),
+            Event::Pit => parse_redis_result::<Vec<Pit>>(
+                self.redis_client
+                    .get_json::<Vec<Pit>, String>("pits".to_string())
+                    .await,
+            ),
+            Event::Position => parse_redis_result::<Vec<Position>>(
+                self.redis_client
+                    .get_json::<Vec<Position>, String>("position:4".to_string())
                     .await,
             ),
             _ => None,

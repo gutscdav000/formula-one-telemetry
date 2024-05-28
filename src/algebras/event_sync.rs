@@ -102,7 +102,7 @@ impl EventSync for EventSyncImpl<'_> {
                     String::from("intervals"),
                 )
                 .await;
-            self.tx.fire_and_forget(Event::Interval);
+            // self.tx.fire_and_forget(Event::Interval);
         }
     }
 
@@ -133,6 +133,7 @@ impl EventSync for EventSyncImpl<'_> {
                 .redis
                 .redis_fire_and_forget::<Lap>(maybe_laps.clone(), String::from("laps"))
                 .await;
+            self.tx.fire_and_forget(Event::Lap);
         }
     }
 
@@ -146,6 +147,7 @@ impl EventSync for EventSyncImpl<'_> {
                 .redis
                 .redis_fire_and_forget::<Pit>(maybe_pits.clone(), String::from("pits"))
                 .await;
+            //            self.tx.fire_and_forget(Event::Pit);
         }
     }
 
@@ -168,6 +170,7 @@ impl EventSync for EventSyncImpl<'_> {
                     String::from(format!("position:{}", driver_number,)),
                 )
                 .await;
+            self.tx.fire_and_forget(Event::Position);
         }
     }
 
