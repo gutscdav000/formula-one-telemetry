@@ -8,6 +8,8 @@ use crate::types::lap::Lap;
 use crate::types::pit::Pit;
 use crate::types::position::Position;
 use crate::types::redis::RedisClientError;
+use crate::types::stint::Stint;
+use crate::types::team_radio::TeamRadio;
 use crate::types::to_json::ToJson;
 use async_trait::async_trait;
 use axum::routing::get;
@@ -92,6 +94,16 @@ impl Websocket for WebsocketImpl {
             Event::Position => parse_redis_result::<Vec<Position>>(
                 self.redis_client
                     .get_json::<Vec<Position>, String>("position:4".to_string())
+                    .await,
+            ),
+            Event::Stint => parse_redis_result::<Vec<Stint>>(
+                self.redis_client
+                    .get_json::<Vec<Stint>, String>("stints".to_string())
+                    .await,
+            ),
+            Event::TeamRadio => parse_redis_result::<Vec<TeamRadio>>(
+                self.redis_client
+                    .get_json::<Vec<TeamRadio>, String>("team_radio".to_string())
                     .await,
             ),
             _ => None,

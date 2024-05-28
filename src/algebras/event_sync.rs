@@ -120,6 +120,7 @@ impl EventSync for EventSyncImpl<'_> {
                     String::from("team_radio"),
                 )
                 .await;
+            self.tx.fire_and_forget(Event::TeamRadio);
         }
     }
 
@@ -184,6 +185,7 @@ impl EventSync for EventSyncImpl<'_> {
                 .redis
                 .redis_fire_and_forget::<Stint>(maybe_stints.clone(), String::from("stints"))
                 .await;
+            //self.tx.fire_and_forget(Event::Stint);
         }
     }
 

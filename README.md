@@ -22,14 +22,14 @@ Currently a work in progress using the [openf1.org](https://openf1.org/) to aggr
 - [X] redis request caching
 - [ ] otel open telemetry tracing
 - [X] http server
-- [ ] websocke messages for:
+- [ ] websocket messages for:
   - [X] car_data
   - [X] intervals
-  - [ ] team_radio
+  - [X] team_radio
   - [X] laps
   - [X] pit
   - [X] position
-  - [ ] stints
+  - [X] stints
   - [ ] session
 
 Note: more endponts might be required to make metadata available for filtering
