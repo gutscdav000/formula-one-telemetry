@@ -1,6 +1,7 @@
 pub mod car_data;
 pub mod car_location;
 pub mod driver;
+pub mod event;
 pub mod event_sync;
 pub mod flag;
 pub mod interval;
@@ -13,4 +14,5 @@ pub mod redis;
 pub mod session;
 pub mod stint;
 pub mod team_radio;
+pub mod to_json;
 pub mod weather;

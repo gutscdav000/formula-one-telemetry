@@ -1,50 +1,51 @@
 /*
- {
-    "date_start": "2023-09-16T13:59:07.606000+00:00",
-    "driver_number": 63,
-    "duration_sector_1": 26.966,
-    "duration_sector_2": 38.657,
-    "duration_sector_3": 26.12,
-    "i1_speed": 307,
-    "i2_speed": 277,
-    "is_pit_out_lap": false,
-    "lap_duration": 91.743,
-    "lap_number": 8,
-    "meeting_key": 1219,
-    "segments_sector_1": [
-      2049,
-      2049,
-      2049,
-      2051,
-      2049,
-      2051,
-      2049,
-      2049
-    ],
-    "segments_sector_2": [
-      2049,
-      2049,
-      2049,
-      2049,
-      2049,
-      2049,
-      2049,
-      2049
-    ],
-    "segments_sector_3": [
-      2048,
-      2048,
-      2048,
-      2048,
-      2048,
-      2064,
-      2064,
-      2064
-    ],
-    "session_key": 9161,
-    "st_speed": 298
-  }
+{
+   "date_start": "2023-09-16T13:59:07.606000+00:00",
+   "driver_number": 63,
+   "duration_sector_1": 26.966,
+   "duration_sector_2": 38.657,
+   "duration_sector_3": 26.12,
+   "i1_speed": 307,
+   "i2_speed": 277,
+   "is_pit_out_lap": false,
+   "lap_duration": 91.743,
+   "lap_number": 8,
+   "meeting_key": 1219,
+   "segments_sector_1": [
+     2049,
+     2049,
+     2049,
+     2051,
+     2049,
+     2051,
+     2049,
+     2049
+   ],
+   "segments_sector_2": [
+     2049,
+     2049,
+     2049,
+     2049,
+     2049,
+     2049,
+     2049,
+     2049
+   ],
+   "segments_sector_3": [
+     2048,
+     2048,
+     2048,
+     2048,
+     2048,
+     2064,
+     2064,
+     2064
+   ],
+   "session_key": 9161,
+   "st_speed": 298
+ }
 */
+use crate::types::to_json::ToJson;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
@@ -67,4 +68,10 @@ pub struct Lap {
     //    pub segments_sector_3: Vec<u32>,
     pub session_key: u32,
     pub st_speed: u32,
+}
+
+impl ToJson for Vec<Lap> {
+    fn to_json(&self) -> Option<String> {
+        serde_json::to_string(self).ok()
+    }
 }

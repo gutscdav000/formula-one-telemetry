@@ -1,3 +1,4 @@
+use crate::types::to_json::ToJson;
 use serde::{Deserialize, Serialize};
 /**
   [{
@@ -25,4 +26,10 @@ pub struct CarData {
     pub session_key: u32,
     pub speed: u32,
     pub throttle: u32,
+}
+
+impl ToJson for Vec<CarData> {
+    fn to_json(&self) -> Option<String> {
+        serde_json::to_string(self).ok()
+    }
 }

@@ -19,17 +19,18 @@ Currently a work in progress using the [openf1.org](https://openf1.org/) to aggr
 
 
 ## Desired Feature List
-- redis request caching
-- otel open telemetry tracing
-- http server
-- http endpoints for:
-  - car_data
-  - intervals
-  - team_radio
-  - laps
-  - pit
-  - position
-  - stints
+- [X] redis request caching
+- [ ] otel open telemetry tracing
+- [X] http server
+- [X] websocket messages for:
+  - [X] car_data
+  - [X] intervals
+  - [X] team_radio
+  - [X] laps
+  - [X] pit
+  - [X] position
+  - [X] stints
+- [ ] websocket data pre-fetch
 
 Note: more endponts might be required to make metadata available for filtering
-the above endpoints. 
+the above endpoints.

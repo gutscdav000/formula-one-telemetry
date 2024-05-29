@@ -27,6 +27,7 @@ pub trait Redis {
     );
 }
 
+#[derive(Clone)]
 pub struct RedisImpl {
     pub client: RedisClient,
 }

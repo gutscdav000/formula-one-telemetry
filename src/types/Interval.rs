@@ -9,7 +9,8 @@
     "session_key": 9165
   }
 ]
-*/
+ */
+use crate::types::to_json::ToJson;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
@@ -20,4 +21,10 @@ pub struct Interval {
     pub date: String, //TODO: make this a timestamp
     pub session_key: u32,
     pub meeting_key: u32,
+}
+
+impl ToJson for Vec<Interval> {
+    fn to_json(&self) -> Option<String> {
+        serde_json::to_string(self).ok()
+    }
 }

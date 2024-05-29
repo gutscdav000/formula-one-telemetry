@@ -1,9 +1,11 @@
 use crate::algebras::car_data_api::CarDataApi;
 use crate::algebras::car_data_api::CarDataApiImpl;
+use crate::algebras::channel_queue::*;
 use crate::algebras::redis::Redis;
 use crate::algebras::redis::RedisImpl;
 use crate::types::car_data::CarData;
 use crate::types::driver::*;
+use crate::types::event::Event;
 use crate::types::event_sync::EventSyncConfig;
 use crate::types::interval::Interval;
 use crate::types::lap::Lap;
@@ -12,7 +14,9 @@ use crate::types::position::Position;
 use crate::types::stint::Stint;
 use crate::types::team_radio::TeamRadio;
 use async_trait::async_trait;
-use log::{debug, info};
+use log::{debug, error, info};
+use std::sync::Arc;
+use tokio::sync::broadcast::Sender;
 use tokio::time::{self, Duration};
 
 #[async_trait]
@@ -52,6 +56,7 @@ pub struct EventSyncImpl<'a> {
     pub api: &'a CarDataApiImpl<'a>,
     pub redis: &'a RedisImpl,
     pub delay_config: &'a EventSyncConfig,
+    pub tx: Arc<dyn ChannelQueue>,
 }
 
 #[async_trait]
@@ -66,7 +71,6 @@ impl EventSync for EventSyncImpl<'_> {
         let mut time_interval = time::interval(Duration::from_secs(
             self.delay_config.car_data_duration_secs,
         ));
-        let mut counter = 0;
         loop {
             time_interval.tick().await;
             let maybe_car_data = self.api.get_car_data(session_key, driver_number, speed);
@@ -80,10 +84,7 @@ impl EventSync for EventSyncImpl<'_> {
                     )),
                 )
                 .await;
-            let data_len = maybe_car_data.map_or(0, |vec| vec.len());
-            info!("# requests: {counter}, data len: {data_len}");
-            debug!("car_data upserted");
-            counter = counter + 1;
+            self.tx.fire_and_forget(Event::CarData);
         }
     }
 
@@ -101,6 +102,7 @@ impl EventSync for EventSyncImpl<'_> {
                     String::from("intervals"),
                 )
                 .await;
+            self.tx.fire_and_forget(Event::Interval);
         }
     }
 
@@ -118,6 +120,7 @@ impl EventSync for EventSyncImpl<'_> {
                     String::from("team_radio"),
                 )
                 .await;
+            self.tx.fire_and_forget(Event::TeamRadio);
         }
     }
 
@@ -131,6 +134,7 @@ impl EventSync for EventSyncImpl<'_> {
                 .redis
                 .redis_fire_and_forget::<Lap>(maybe_laps.clone(), String::from("laps"))
                 .await;
+            self.tx.fire_and_forget(Event::Lap);
         }
     }
 
@@ -144,6 +148,7 @@ impl EventSync for EventSyncImpl<'_> {
                 .redis
                 .redis_fire_and_forget::<Pit>(maybe_pits.clone(), String::from("pits"))
                 .await;
+            self.tx.fire_and_forget(Event::Pit);
         }
     }
 
@@ -166,6 +171,7 @@ impl EventSync for EventSyncImpl<'_> {
                     String::from(format!("position:{}", driver_number,)),
                 )
                 .await;
+            self.tx.fire_and_forget(Event::Position);
         }
     }
 
@@ -179,6 +185,7 @@ impl EventSync for EventSyncImpl<'_> {
                 .redis
                 .redis_fire_and_forget::<Stint>(maybe_stints.clone(), String::from("stints"))
                 .await;
+            self.tx.fire_and_forget(Event::Stint);
         }
     }
 
