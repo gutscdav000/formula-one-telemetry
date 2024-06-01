@@ -13,42 +13,37 @@ use crate::types::team_radio::TeamRadio;
 use crate::types::to_json::ToJson;
 use async_trait::async_trait;
 use axum::routing::get;
+use futures::stream::FuturesUnordered;
+use futures::StreamExt;
 use log::{error, info};
 use socketioxide::extract::SocketRef;
 use socketioxide::SocketIo;
 use std::error::Error;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
+use tokio::sync::Mutex as TokioMutex;
 use tower::ServiceBuilder;
 use tower_http::cors::CorsLayer;
 
 #[async_trait]
 pub trait Websocket {
-    async fn run(
-        self: Arc<Self>,
-        channel_tx: Arc<dyn ChannelQueue + Send + Sync>,
-    ) -> Result<(), Box<dyn Error>>;
+    async fn run(self: Arc<Self>) -> Result<(), Box<dyn Error>>;
     async fn route_event(self: Arc<Self>, msg: &Message) -> Option<String>;
-    async fn on_connect(
-        self: Arc<Self>,
-        socket: SocketRef,
-        channel_tx: Arc<dyn ChannelQueue + Send + Sync>,
-    );
+    async fn on_connect(self: Arc<Self>, socket: SocketRef);
+    async fn cache_prefetch(self: Arc<Self>, socket: Arc<TokioMutex<SocketRef>>);
 }
 pub struct WebsocketImpl {
     pub redis_client: Arc<RedisImpl>,
+    pub channel_tx: Arc<dyn ChannelQueue + Send + Sync>,
 }
 
 #[async_trait]
 impl Websocket for WebsocketImpl {
-    async fn run(
-        self: Arc<Self>,
-        channel_tx: Arc<dyn ChannelQueue + Send + Sync>,
-    ) -> Result<(), Box<dyn Error>> {
+    async fn run(self: Arc<Self>) -> Result<(), Box<dyn Error>> {
         let (layer, io) = SocketIo::new_layer();
         io.ns("/", move |socket: SocketRef| {
             tokio_scoped::scope(|scope| {
                 scope.spawn(async move {
-                    self.on_connect(socket, channel_tx).await;
+                    self.on_connect(socket /*, channel_tx*/).await;
                 });
             });
         });
@@ -106,27 +101,52 @@ impl Websocket for WebsocketImpl {
                     .get_json::<Vec<TeamRadio>, String>("team_radio".to_string())
                     .await,
             ),
-            _ => None,
+            //TODO: Not yet implemented
+            Event::Session => None,
         }
     }
 
-    async fn on_connect(
-        self: Arc<Self>,
-        socket: SocketRef,
-        channel_tx: Arc<dyn ChannelQueue + Send + Sync>,
-    ) {
+    async fn on_connect(self: Arc<Self>, socket: SocketRef) {
         info!("socket connected: {}", socket.id);
 
-        let mut rx = channel_tx.subscribe();
+        //TODO: prefetch here
+        // error!("CACHE PREFETCH");
+        // let socket_mutex = Arc::new(TokioMutex::new(socket));
+        // let _ = self.clone().cache_prefetch(Arc::clone(&socket_mutex)).await;
+        error!("CACHE PREFETCH");
+        let socket_mutex = Arc::new(TokioMutex::new(socket));
+        let _ = self.clone().cache_prefetch(Arc::clone(&socket_mutex)).await;
 
+        let mut rx = self.channel_tx.subscribe();
+        let socket_mutex_clone = Arc::clone(&socket_mutex);
+
+        let mut rx = self.channel_tx.subscribe();
         tokio::spawn(async move {
             while let Ok(message) = rx.recv().await {
                 let s = self.clone().route_event(&message).await;
                 info!("Emitting message: {:?}", message);
                 s.clone()
-                    .and_then(|s| Some(socket.emit(format!("{:?}", message), &s)));
+                    .and_then(|s| Some(socket.emit(format!("{}", message), &s)));
             }
         });
+    }
+
+    async fn cache_prefetch(self: Arc<Self>, socket: Arc<TokioMutex<SocketRef>>) {
+        let futures: FuturesUnordered<_> = Event::all_variants()
+            .into_iter()
+            .map(|event| {
+                let self_clone = Arc::clone(&self);
+                let socket_clone = Arc::clone(&socket);
+                async move {
+                    let message = Message { msg: event };
+                    let s = self_clone.route_event(&message).await;
+                    let socket_lock = socket_clone.lock().await;
+                    let _ = socket_lock.emit(format!("{}", message), &s);
+                }
+            })
+            .collect();
+
+        futures.for_each(|_| async {}).await;
     }
 }
 

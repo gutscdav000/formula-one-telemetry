@@ -34,3 +34,6 @@ Currently a work in progress using the [openf1.org](https://openf1.org/) to aggr
 
 Note: more endponts might be required to make metadata available for filtering
 the above endpoints.
+
+## [API data source](https://openf1.org/?shell#introduction)
+

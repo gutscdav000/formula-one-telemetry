@@ -11,3 +11,18 @@ pub enum Event {
     Stint,
     TeamRadio,
 }
+
+impl Event {
+    pub fn all_variants() -> Vec<Event> {
+        vec![
+            Event::CarData,
+            Event::Interval,
+            Event::Lap,
+            Event::Pit,
+            Event::Position,
+            Event::Session,
+            Event::Stint,
+            Event::TeamRadio,
+        ]
+    }
+}
