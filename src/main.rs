@@ -49,11 +49,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let event_sync_delay_config: &'static EventSyncConfig = &EventSyncConfig {
         car_data_duration_secs: 2,
         interval_duration_secs: 5,
-        team_radio_duration_secs: 5, //30
-        laps_duration_secs: 5,       //120
-        pit_duration_secs: 5,        //120
-        position_duration_secs: 5,   //TODO: probably higher if we're not using this...
-        stints_duration_secs: 5,     //120
+        team_radio_duration_secs: 30,
+        laps_duration_secs: 120,
+        pit_duration_secs: 120,
+        position_duration_secs: 120,
+        stints_duration_secs: 120,
     };
     let event_sync = EventSyncImpl {
         api: &api,

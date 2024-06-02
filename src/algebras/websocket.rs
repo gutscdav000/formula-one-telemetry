@@ -124,9 +124,10 @@ impl Websocket for WebsocketImpl {
         tokio::spawn(async move {
             while let Ok(message) = rx.recv().await {
                 let s = self.clone().route_event(&message).await;
+                let sock = socket_mutex_clone.lock().await;
                 info!("Emitting message: {:?}", message);
                 s.clone()
-                    .and_then(|s| Some(socket.emit(format!("{}", message), &s)));
+                    .and_then(|s| Some(sock.emit(format!("{}", message), &s)));
             }
         });
     }
@@ -139,9 +140,9 @@ impl Websocket for WebsocketImpl {
                 let socket_clone = Arc::clone(&socket);
                 async move {
                     let message = Message { msg: event };
-                    let s = self_clone.route_event(&message).await;
+                    let maybe_json = self_clone.route_event(&message).await;
                     let socket_lock = socket_clone.lock().await;
-                    let _ = socket_lock.emit(format!("{}", message), &s);
+                    let _ = maybe_json.map(|json| socket_lock.emit(format!("{}", message), &json));
                 }
             })
             .collect();
