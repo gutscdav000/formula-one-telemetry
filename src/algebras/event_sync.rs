@@ -14,9 +14,7 @@ use crate::types::position::Position;
 use crate::types::stint::Stint;
 use crate::types::team_radio::TeamRadio;
 use async_trait::async_trait;
-use log::{debug, error, info};
 use std::sync::Arc;
-use tokio::sync::broadcast::Sender;
 use tokio::time::{self, Duration};
 
 #[async_trait]
@@ -61,7 +59,6 @@ pub struct EventSyncImpl<'a> {
 
 #[async_trait]
 impl EventSync for EventSyncImpl<'_> {
-    //TODO: clean this up once we're finished
     async fn car_data_sync(
         &self,
         session_key: u32,
@@ -203,17 +200,17 @@ impl EventSync for EventSyncImpl<'_> {
     ) {
         tokio_scoped::scope(|scope| {
             scope.spawn(async move {
-                tokio::select! {
-                        _ = self.car_data_sync(session_key, Some(driver_number), speed) => {},
-                        _ = self.intervals_sync(session_key, maybe_interval) => {},
-                // We want to sync all team radio, not by driver
-                        _ = self.team_radio_sync(session_key, None) => {},
-                //TODO: Research required: lap could cause issues, depending on value provided.
-                        _ = self.laps_sync(session_key, &driver_number, lap) => {},
-                        _ = self.pit_sync(session_key, pit_duration) => {},
-                        _ = self.position_sync(meeting_key, &driver_number, position) => {},
-                        _ = self.stints_sync(session_key, tyre_age) => {},
-                    }
+                tokio::join!(
+                    self.car_data_sync(session_key, Some(driver_number), speed),
+                    self.intervals_sync(session_key, maybe_interval),
+                    // We want to sync all team radio, not by driver
+                    self.team_radio_sync(session_key, None),
+                    //TODO: Research required: lap could cause issues, depending on value provided.
+                    self.laps_sync(session_key, &driver_number, lap),
+                    self.pit_sync(session_key, pit_duration),
+                    self.position_sync(meeting_key, &driver_number, position),
+                    self.stints_sync(session_key, tyre_age),
+                );
             });
         });
     }

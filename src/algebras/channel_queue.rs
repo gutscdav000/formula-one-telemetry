@@ -1,6 +1,7 @@
 use crate::types::event::*;
 use log::error;
 use std::clone::Clone;
+use std::fmt;
 use tokio::sync::broadcast::error::SendError;
 use tokio::sync::broadcast::*;
 
@@ -17,6 +18,12 @@ pub trait ChannelQueue: Send + Sync {
 #[derive(Clone, Debug)]
 pub struct Message {
     pub msg: Event,
+}
+
+impl fmt::Display for Message {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self.msg)
+    }
 }
 
 pub struct ChannelQueueImpl {
