@@ -10,7 +10,6 @@ use crate::algebras::redis::RedisImpl;
 use crate::algebras::websocket::Websocket;
 use crate::algebras::websocket::WebsocketImpl;
 use crate::types::driver::*;
-use crate::types::event::Event;
 use crate::types::event_sync::EventSyncConfig;
 use crate::types::session::Session;
 use std::error::Error;
@@ -19,7 +18,6 @@ use std::thread;
 use std::time::Duration;
 use tokio::sync::broadcast;
 use tracing::info;
-use tracing_subscriber::FmtSubscriber;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -81,8 +79,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
     thread::sleep(Duration::from_millis(5000));
 
     info!("Begin Websocket streaming");
-    // TODO: is this for logging or tracing too?
-    tracing::subscriber::set_global_default(FmtSubscriber::default())?;
     let _ = Arc::new(WebsocketImpl {
         redis_client: Arc::new(redis_client.clone()),
         channel_tx: channel_queue,

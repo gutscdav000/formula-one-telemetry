@@ -14,9 +14,7 @@ use crate::types::position::Position;
 use crate::types::stint::Stint;
 use crate::types::team_radio::TeamRadio;
 use async_trait::async_trait;
-use log::{debug, error, info};
 use std::sync::Arc;
-use tokio::sync::broadcast::Sender;
 use tokio::time::{self, Duration};
 
 #[async_trait]
@@ -61,7 +59,6 @@ pub struct EventSyncImpl<'a> {
 
 #[async_trait]
 impl EventSync for EventSyncImpl<'_> {
-    //TODO: clean this up once we're finished
     async fn car_data_sync(
         &self,
         session_key: u32,

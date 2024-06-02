@@ -15,12 +15,11 @@ use async_trait::async_trait;
 use axum::routing::get;
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
-use log::{error, info};
+use log::info;
 use socketioxide::extract::SocketRef;
 use socketioxide::SocketIo;
 use std::error::Error;
-use std::sync::{Arc, Mutex};
-use tokio::sync::Mutex as TokioMutex;
+use std::sync::Arc;
 use tower::ServiceBuilder;
 use tower_http::cors::CorsLayer;
 
@@ -29,7 +28,7 @@ pub trait Websocket {
     async fn run(self: Arc<Self>) -> Result<(), Box<dyn Error>>;
     async fn route_event(self: Arc<Self>, msg: &Message) -> Option<String>;
     async fn on_connect(self: Arc<Self>, socket: SocketRef);
-    async fn cache_prefetch(self: Arc<Self>, socket: Arc<TokioMutex<SocketRef>>);
+    async fn cache_prefetch(self: Arc<Self>, socket: &Arc<SocketRef>);
 }
 pub struct WebsocketImpl {
     pub redis_client: Arc<RedisImpl>,
@@ -43,7 +42,7 @@ impl Websocket for WebsocketImpl {
         io.ns("/", move |socket: SocketRef| {
             tokio_scoped::scope(|scope| {
                 scope.spawn(async move {
-                    self.on_connect(socket /*, channel_tx*/).await;
+                    self.on_connect(socket).await;
                 });
             });
         });
@@ -109,30 +108,21 @@ impl Websocket for WebsocketImpl {
     async fn on_connect(self: Arc<Self>, socket: SocketRef) {
         info!("socket connected: {}", socket.id);
 
-        //TODO: prefetch here
-        // error!("CACHE PREFETCH");
-        // let socket_mutex = Arc::new(TokioMutex::new(socket));
-        // let _ = self.clone().cache_prefetch(Arc::clone(&socket_mutex)).await;
-        error!("CACHE PREFETCH");
-        let socket_mutex = Arc::new(TokioMutex::new(socket));
-        let _ = self.clone().cache_prefetch(Arc::clone(&socket_mutex)).await;
-
+        let socket_arc = Arc::new(socket);
+        let _ = self.clone().cache_prefetch(&socket_arc).await;
         let mut rx = self.channel_tx.subscribe();
-        let socket_mutex_clone = Arc::clone(&socket_mutex);
 
-        let mut rx = self.channel_tx.subscribe();
         tokio::spawn(async move {
             while let Ok(message) = rx.recv().await {
-                let s = self.clone().route_event(&message).await;
-                let sock = socket_mutex_clone.lock().await;
-                info!("Emitting message: {:?}", message);
-                s.clone()
-                    .and_then(|s| Some(sock.emit(format!("{}", message), &s)));
+                self.clone().route_event(&message).await.and_then(|s| {
+                    info!("Emitting message: {:?}", message);
+                    Some(socket_arc.emit(format!("{}", message), &s))
+                });
             }
         });
     }
 
-    async fn cache_prefetch(self: Arc<Self>, socket: Arc<TokioMutex<SocketRef>>) {
+    async fn cache_prefetch(self: Arc<Self>, socket: &Arc<SocketRef>) {
         let futures: FuturesUnordered<_> = Event::all_variants()
             .into_iter()
             .map(|event| {
@@ -141,8 +131,7 @@ impl Websocket for WebsocketImpl {
                 async move {
                     let message = Message { msg: event };
                     let maybe_json = self_clone.route_event(&message).await;
-                    let socket_lock = socket_clone.lock().await;
-                    let _ = maybe_json.map(|json| socket_lock.emit(format!("{}", message), &json));
+                    let _ = maybe_json.map(|json| socket_clone.emit(format!("{}", message), &json));
                 }
             })
             .collect();
