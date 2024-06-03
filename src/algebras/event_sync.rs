@@ -29,7 +29,7 @@ pub trait EventSync {
     async fn intervals_sync(&self, session_key: u32, maybe_interval: Option<f32>);
     async fn team_radio_sync(&self, session_key: u32, driver_number: Option<DriverNumber>);
     async fn laps_upsert(&self, session_key: u32, driver_number: &DriverNumber, lap: u32);
-    async fn laps_sync(&self, session_key: u32, lap: u32);
+    async fn laps_sync(&self, session_key: u32);
     async fn pit_sync(&self, session_key: u32, pit_duration: Option<u32>);
     async fn position_upsert(
         &self,
@@ -45,7 +45,6 @@ pub trait EventSync {
         meeting_key: u32,
         speed: Option<u32>,
         maybe_interval: Option<f32>,
-        lap: u32,
         pit_duration: Option<u32>,
         position: Option<u32>,
         tyre_age: Option<u32>,
@@ -145,9 +144,10 @@ impl EventSync for EventSyncImpl<'_> {
             )
             .await;
     }
-    async fn laps_sync(&self, session_key: u32, lap: u32) {
+    async fn laps_sync(&self, session_key: u32) {
         let mut time_interval =
             time::interval(Duration::from_secs(self.delay_config.laps_duration_secs));
+        let mut lap_number: u32 = 1;
         loop {
             time_interval.tick().await;
             tokio_scoped::scope(|scope| {
@@ -155,11 +155,12 @@ impl EventSync for EventSyncImpl<'_> {
                     .into_iter()
                     .for_each(|driver_number| {
                         scope.spawn(async move {
-                            let _ = self.laps_upsert(session_key, &driver_number, lap);
+                            let _ = self.laps_upsert(session_key, &driver_number, lap_number);
                         });
                     });
             });
             self.tx.fire_and_forget(Event::Lap);
+            lap_number += 1;
         }
     }
 
@@ -232,7 +233,6 @@ impl EventSync for EventSyncImpl<'_> {
         meeting_key: u32,
         speed: Option<u32>,
         maybe_interval: Option<f32>,
-        lap: u32,
         pit_duration: Option<u32>,
         position: Option<u32>,
         tyre_age: Option<u32>,
@@ -245,7 +245,8 @@ impl EventSync for EventSyncImpl<'_> {
                     // We want to sync all team radio, not by driver
                     self.team_radio_sync(session_key, None),
                     //TODO: Research required: lap could cause issues, depending on value provided.
-                    self.laps_sync(session_key, lap),
+                    //NOTE: not using laps because incrementing lap only works if app restarted at session start only for Race
+                    //self.laps_sync(session_key),
                     self.pit_sync(session_key, pit_duration),
                     self.position_sync(meeting_key, position),
                     self.stints_sync(session_key, tyre_age),

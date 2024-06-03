@@ -65,7 +65,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 session.meeting_key,
                 None,
                 None,
-                60,
                 None,
                 None,
                 None,
