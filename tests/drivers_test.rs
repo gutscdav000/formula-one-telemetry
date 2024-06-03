@@ -30,7 +30,7 @@ mod tests {
             session_type: "Race".to_string(),
             year: 2023,
         };
-        let driver_number = get_driver_number(&DriverName::MaxVerstappen);
+        let driver_number = DriverNumber::get_driver_number(&DriverName::MaxVerstappen);
         let expected_driver = vec![Driver {
             driver_number: 1,
             broadcast_name: "M VERSTAPPEN".to_string(),
@@ -62,7 +62,7 @@ mod tests {
 
     #[test]
     fn serialize_driver_number() {
-        let driver_number = get_driver_number(&DriverName::MaxVerstappen);
+        let driver_number = DriverNumber::get_driver_number(&DriverName::MaxVerstappen);
         let serialized = serde_json::to_string(&driver_number).unwrap();
         assert_eq!(serialized, "1");
 

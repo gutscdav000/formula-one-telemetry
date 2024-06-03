@@ -9,7 +9,6 @@ use crate::algebras::http_requester::TelemetryHttpRequester;
 use crate::algebras::redis::RedisImpl;
 use crate::algebras::websocket::Websocket;
 use crate::algebras::websocket::WebsocketImpl;
-use crate::types::driver::*;
 use crate::types::event_sync::EventSyncConfig;
 use crate::types::session::Session;
 use std::error::Error;
@@ -37,7 +36,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .and_then(|vec| vec.clone().pop())
         .expect("Session not found, or request timed out");
 
-    let driver_number = get_driver_number(&DriverName::LandoNorris);
     let redis_client: &'static RedisImpl = Box::leak(Box::new(
         RedisImpl::default().expect("unable to connect to redis"),
     ));
@@ -67,8 +65,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 session.meeting_key,
                 None,
                 None,
-                driver_number,
-                60,
                 None,
                 None,
                 None,

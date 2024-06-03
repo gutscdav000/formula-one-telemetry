@@ -184,7 +184,7 @@ mod tests {
                 session_key: 9149,
             },
         ];
-        let driver_number = get_driver_number(&DriverName::MaxVerstappen);
+        let driver_number = DriverNumber::get_driver_number(&DriverName::MaxVerstappen);
         let position: Option<Vec<Position>> = API.get_position(1217, &driver_number, Some(1));
         println!("Position: {:?}", position);
 
@@ -196,7 +196,6 @@ mod tests {
 
     #[test]
     fn failed_request_position() {
-        let driver_number = get_driver_number(&DriverName::MaxVerstappen);
         let position: Option<Vec<Position>> =
             API.get_position(999999, &DriverNumber::new(150), Some(1));
         assert_eq!(position, None)

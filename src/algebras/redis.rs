@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use core::fmt::Display;
 use fred::prelude::*;
 use fred::types::RedisKey;
-use log::{error, info, warn};
+use log::{debug, error, info, warn};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use serde_json;
@@ -40,7 +40,7 @@ impl RedisImpl {
         let _ = client.connect(Some(reconnect_policy));
         let _ = client.wait_for_connect();
         let redis_algebra: RedisImpl = RedisImpl { client: client };
-        info!("Connected to Redis");
+        info!("Redis Connection Succeeded");
         Ok(redis_algebra)
     }
 }
@@ -80,7 +80,7 @@ impl Redis for RedisImpl {
     ) {
         match maybe_value {
             Some(value) => match self.set_json::<Vec<V>>(&redis_key, value).await {
-                Ok(_) => info!("{redis_key} synced"),
+                Ok(_) => debug!("{redis_key} synced"),
                 Err(e) => error!("could not Redis write {redis_key}, err: {e}"),
             },
             None => warn!("no {redis_key} returned from client"),

@@ -70,31 +70,56 @@ impl DriverNumber {
     pub fn new(num: u32) -> Self {
         DriverNumber(num)
     }
-}
 
-pub fn get_driver_number(driver_name: &DriverName) -> DriverNumber {
-    let driver_map: HashMap<DriverName, DriverNumber> = HashMap::from([
-        (DriverName::MaxVerstappen, DriverNumber(1)),
-        (DriverName::LoganSargeant, DriverNumber(2)),
-        (DriverName::DanielRicciardo, DriverNumber(3)),
-        (DriverName::LandoNorris, DriverNumber(4)),
-        (DriverName::PierreGasly, DriverNumber(10)),
-        (DriverName::SergioPerez, DriverNumber(11)),
-        (DriverName::FernandoAlonso, DriverNumber(14)),
-        (DriverName::CharlesLeclerc, DriverNumber(16)),
-        (DriverName::LanceStroll, DriverNumber(18)),
-        (DriverName::KevinMagnussen, DriverNumber(20)),
-        (DriverName::YukiTsunoda, DriverNumber(22)),
-        (DriverName::AlexAlbon, DriverNumber(23)),
-        (DriverName::ZhouGuanyu, DriverNumber(24)),
-        (DriverName::NicoHulkenberg, DriverNumber(27)),
-        (DriverName::EstebanOcon, DriverNumber(31)),
-        (DriverName::LewisHamilton, DriverNumber(44)),
-        (DriverName::CarlosSainz, DriverNumber(55)),
-        (DriverName::GeorgeRussell, DriverNumber(63)),
-        (DriverName::ValtteriBottas, DriverNumber(77)),
-        (DriverName::OscarPiastri, DriverNumber(81)),
-    ]);
+    pub fn get_driver_number(driver_name: &DriverName) -> DriverNumber {
+        let driver_map: HashMap<DriverName, DriverNumber> = HashMap::from([
+            (DriverName::MaxVerstappen, DriverNumber(1)),
+            (DriverName::LoganSargeant, DriverNumber(2)),
+            (DriverName::DanielRicciardo, DriverNumber(3)),
+            (DriverName::LandoNorris, DriverNumber(4)),
+            (DriverName::PierreGasly, DriverNumber(10)),
+            (DriverName::SergioPerez, DriverNumber(11)),
+            (DriverName::FernandoAlonso, DriverNumber(14)),
+            (DriverName::CharlesLeclerc, DriverNumber(16)),
+            (DriverName::LanceStroll, DriverNumber(18)),
+            (DriverName::KevinMagnussen, DriverNumber(20)),
+            (DriverName::YukiTsunoda, DriverNumber(22)),
+            (DriverName::AlexAlbon, DriverNumber(23)),
+            (DriverName::ZhouGuanyu, DriverNumber(24)),
+            (DriverName::NicoHulkenberg, DriverNumber(27)),
+            (DriverName::EstebanOcon, DriverNumber(31)),
+            (DriverName::LewisHamilton, DriverNumber(44)),
+            (DriverName::CarlosSainz, DriverNumber(55)),
+            (DriverName::GeorgeRussell, DriverNumber(63)),
+            (DriverName::ValtteriBottas, DriverNumber(77)),
+            (DriverName::OscarPiastri, DriverNumber(81)),
+        ]);
 
-    *driver_map.get(driver_name).unwrap()
+        *driver_map.get(driver_name).unwrap()
+    }
+
+    pub fn all_variants() -> Vec<DriverNumber> {
+        vec![
+            DriverNumber(1),
+            DriverNumber(2),
+            DriverNumber(3),
+            DriverNumber(4),
+            DriverNumber(10),
+            DriverNumber(11),
+            DriverNumber(14),
+            DriverNumber(16),
+            DriverNumber(18),
+            DriverNumber(20),
+            DriverNumber(22),
+            DriverNumber(23),
+            DriverNumber(24),
+            DriverNumber(27),
+            DriverNumber(31),
+            DriverNumber(44),
+            DriverNumber(55),
+            DriverNumber(63),
+            DriverNumber(77),
+            DriverNumber(81),
+        ]
+    }
 }

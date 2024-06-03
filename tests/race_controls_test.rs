@@ -16,19 +16,33 @@ mod tests {
 
     #[test]
     fn successful_race_controls_request() {
-        let driver_number = get_driver_number(&DriverName::MaxVerstappen);
-        let expected_race_control = vec![RaceControl {
-            category: Category::Flag,
-            date: "2023-06-04T14:21:01+00:00".to_string(),
-            driver_number: driver_number,
-            flag: Flag::BlackAndWhite,
-            lap_number: 59,
-            meeting_key: 1211,
-            message: "BLACK AND WHITE FLAG FOR CAR 1 (VER) - TRACK LIMITS".to_string(),
-            scope: "Driver".to_string(),
-            sector: None,
-            session_key: 9102,
-        }];
+        let driver_number = DriverNumber::get_driver_number(&DriverName::MaxVerstappen);
+        let expected_race_control: Vec<RaceControl> = vec![
+            RaceControl {
+                category: Category::Flag,
+                date: "2023-06-04T14:21:01+00:00".to_string(),
+                driver_number: driver_number,
+                flag: Flag::BlackAndWhite,
+                lap_number: 59,
+                meeting_key: 1211,
+                message: "BLACK AND WHITE FLAG FOR CAR 1 (VER) - TRACK LIMITS".to_string(),
+                scope: "Driver".to_string(),
+                sector: None,
+                session_key: 9102,
+            },
+            RaceControl {
+                category: Category::Flag,
+                date: "2024-05-19T13:34:34+00:00".to_string(),
+                driver_number: driver_number,
+                flag: Flag::BlackAndWhite,
+                lap_number: 24,
+                meeting_key: 1235,
+                message: "BLACK AND WHITE FLAG FOR CAR 1 (VER) - TRACK LIMITS".to_string(),
+                scope: "Driver".to_string(),
+                sector: None,
+                session_key: 9515,
+            },
+        ];
 
         let race_control: Option<Vec<RaceControl>> = API.get_race_control(
             Some(Category::Flag),

@@ -14,7 +14,7 @@ mod test {
 
     #[test]
     fn successful_sessions_request() {
-        let driver_number = get_driver_number(&DriverName::MaxVerstappen);
+        let driver_number = DriverNumber::get_driver_number(&DriverName::MaxVerstappen);
         let expected_team_radio = vec![
 	    TeamRadio {
 		date: "2023-09-15T09:39:02.584000+00:00".to_string(),
