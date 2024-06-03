@@ -14,6 +14,7 @@ use crate::types::position::Position;
 use crate::types::stint::Stint;
 use crate::types::team_radio::TeamRadio;
 use async_trait::async_trait;
+use log::info;
 use std::sync::Arc;
 use tokio::time::{self, Duration};
 
@@ -95,6 +96,7 @@ impl EventSync for EventSyncImpl<'_> {
                         });
                     });
             });
+            info!("Car Data Synced");
             self.tx.fire_and_forget(Event::CarData);
         }
     }
@@ -113,6 +115,7 @@ impl EventSync for EventSyncImpl<'_> {
                     String::from("intervals"),
                 )
                 .await;
+            info!("Intervals Synced");
             self.tx.fire_and_forget(Event::Interval);
         }
     }
@@ -131,6 +134,7 @@ impl EventSync for EventSyncImpl<'_> {
                     String::from("team_radio"),
                 )
                 .await;
+            info!("Team Radio Synced");
             self.tx.fire_and_forget(Event::TeamRadio);
         }
     }
@@ -159,6 +163,7 @@ impl EventSync for EventSyncImpl<'_> {
                         });
                     });
             });
+            info!("Laps Synced");
             self.tx.fire_and_forget(Event::Lap);
             lap_number += 1;
         }
@@ -174,6 +179,7 @@ impl EventSync for EventSyncImpl<'_> {
                 .redis
                 .redis_fire_and_forget::<Pit>(maybe_pits.clone(), String::from("pits"))
                 .await;
+            info!("Pits Synced");
             self.tx.fire_and_forget(Event::Pit);
         }
     }
@@ -209,6 +215,7 @@ impl EventSync for EventSyncImpl<'_> {
                         });
                     });
             });
+            info!("Positions Synced");
             self.tx.fire_and_forget(Event::Position);
         }
     }
@@ -223,6 +230,7 @@ impl EventSync for EventSyncImpl<'_> {
                 .redis
                 .redis_fire_and_forget::<Stint>(maybe_stints.clone(), String::from("stints"))
                 .await;
+            info!("Stints Synced");
             self.tx.fire_and_forget(Event::Stint);
         }
     }
