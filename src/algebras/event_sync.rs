@@ -28,7 +28,8 @@ pub trait EventSync {
     async fn car_data_sync(&self, session_key: u32, speed: Option<u32>);
     async fn intervals_sync(&self, session_key: u32, maybe_interval: Option<f32>);
     async fn team_radio_sync(&self, session_key: u32, driver_number: Option<DriverNumber>);
-    async fn laps_sync(&self, session_key: u32, driver_number: &DriverNumber, lap: u32);
+    async fn laps_upsert(&self, session_key: u32, driver_number: &DriverNumber, lap: u32);
+    async fn laps_sync(&self, session_key: u32, lap: u32);
     async fn pit_sync(&self, session_key: u32, pit_duration: Option<u32>);
     async fn position_upsert(
         &self,
@@ -44,7 +45,6 @@ pub trait EventSync {
         meeting_key: u32,
         speed: Option<u32>,
         maybe_interval: Option<f32>,
-        driver_number: DriverNumber,
         lap: u32,
         pit_duration: Option<u32>,
         position: Option<u32>,
@@ -135,17 +135,30 @@ impl EventSync for EventSyncImpl<'_> {
             self.tx.fire_and_forget(Event::TeamRadio);
         }
     }
-
-    async fn laps_sync(&self, session_key: u32, driver_number: &DriverNumber, lap: u32) {
+    async fn laps_upsert(&self, session_key: u32, driver_number: &DriverNumber, lap: u32) {
+        let maybe_laps = self.api.get_lap(session_key, driver_number, lap);
+        let _ = self
+            .redis
+            .redis_fire_and_forget::<Lap>(
+                maybe_laps.clone(),
+                String::from(format!("laps:{}", driver_number,)),
+            )
+            .await;
+    }
+    async fn laps_sync(&self, session_key: u32, lap: u32) {
         let mut time_interval =
             time::interval(Duration::from_secs(self.delay_config.laps_duration_secs));
         loop {
             time_interval.tick().await;
-            let maybe_laps = self.api.get_lap(session_key, driver_number, lap);
-            let _ = self
-                .redis
-                .redis_fire_and_forget::<Lap>(maybe_laps.clone(), String::from("laps"))
-                .await;
+            tokio_scoped::scope(|scope| {
+                DriverNumber::all_variants()
+                    .into_iter()
+                    .for_each(|driver_number| {
+                        scope.spawn(async move {
+                            let _ = self.laps_upsert(session_key, &driver_number, lap);
+                        });
+                    });
+            });
             self.tx.fire_and_forget(Event::Lap);
         }
     }
@@ -219,7 +232,6 @@ impl EventSync for EventSyncImpl<'_> {
         meeting_key: u32,
         speed: Option<u32>,
         maybe_interval: Option<f32>,
-        driver_number: DriverNumber,
         lap: u32,
         pit_duration: Option<u32>,
         position: Option<u32>,
@@ -233,7 +245,7 @@ impl EventSync for EventSyncImpl<'_> {
                     // We want to sync all team radio, not by driver
                     self.team_radio_sync(session_key, None),
                     //TODO: Research required: lap could cause issues, depending on value provided.
-                    self.laps_sync(session_key, &driver_number, lap),
+                    self.laps_sync(session_key, lap),
                     self.pit_sync(session_key, pit_duration),
                     self.position_sync(meeting_key, position),
                     self.stints_sync(session_key, tyre_age),

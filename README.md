@@ -32,9 +32,10 @@ Currently a work in progress using the [openf1.org](https://openf1.org/) to aggr
   - [X] stints
   - [ ] session
 - [X] websocket data pre-fetch
-- [ ] cache data for each driver for:
+- [X] cache data for each driver for:
   - [X] car_data
   - [X] position  
+  - [X] laps
 
 Note: more endponts might be required to make metadata available for filtering
 the above endpoints.
