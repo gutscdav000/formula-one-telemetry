@@ -22,7 +22,7 @@ pub trait EventSync {
     async fn car_data_upsert(
         &self,
         session_key: u32,
-        driver_number: DriverNumber,
+        driver_number: &DriverNumber,
         speed: Option<u32>,
     );
     async fn car_data_sync(&self, session_key: u32, speed: Option<u32>);
@@ -30,12 +30,13 @@ pub trait EventSync {
     async fn team_radio_sync(&self, session_key: u32, driver_number: Option<DriverNumber>);
     async fn laps_sync(&self, session_key: u32, driver_number: &DriverNumber, lap: u32);
     async fn pit_sync(&self, session_key: u32, pit_duration: Option<u32>);
-    async fn position_sync(
+    async fn position_upsert(
         &self,
         meeting_key: u32,
         driver_number: &DriverNumber,
         position: Option<u32>,
     );
+    async fn position_sync(&self, meeting_key: u32, position: Option<u32>);
     async fn stints_sync(&self, session_key: u32, tyre_age: Option<u32>);
     async fn run_sync(
         &self,
@@ -63,12 +64,12 @@ impl EventSync for EventSyncImpl<'_> {
     async fn car_data_upsert(
         &self,
         session_key: u32,
-        driver_number: DriverNumber,
+        driver_number: &DriverNumber,
         speed: Option<u32>,
     ) {
         let maybe_car_data = self
             .api
-            .get_car_data(session_key, Some(driver_number), speed);
+            .get_car_data(session_key, Some(*driver_number), speed);
         let _ = self
             .redis
             .redis_fire_and_forget::<CarData>(
@@ -87,9 +88,11 @@ impl EventSync for EventSyncImpl<'_> {
             tokio_scoped::scope(|scope| {
                 DriverNumber::all_variants()
                     .into_iter()
-                    .for_each(|driver_num| {
+                    .for_each(|driver_number| {
                         scope.spawn(async move {
-                            let _ = self.car_data_upsert(session_key, driver_num, speed).await;
+                            let _ = self
+                                .car_data_upsert(session_key, &driver_number, speed)
+                                .await;
                         });
                     });
             });
@@ -160,26 +163,38 @@ impl EventSync for EventSyncImpl<'_> {
             self.tx.fire_and_forget(Event::Pit);
         }
     }
-
-    async fn position_sync(
+    async fn position_upsert(
         &self,
         meeting_key: u32,
         driver_number: &DriverNumber,
         position: Option<u32>,
     ) {
+        let maybe_position = self.api.get_position(meeting_key, driver_number, position);
+        let _ = self
+            .redis
+            .redis_fire_and_forget::<Position>(
+                maybe_position.clone(),
+                String::from(format!("position:{}", driver_number,)),
+            )
+            .await;
+    }
+    async fn position_sync(&self, meeting_key: u32, position: Option<u32>) {
         let mut time_interval = time::interval(Duration::from_secs(
             self.delay_config.position_duration_secs,
         ));
         loop {
             time_interval.tick().await;
-            let maybe_position = self.api.get_position(meeting_key, driver_number, position);
-            let _ = self
-                .redis
-                .redis_fire_and_forget::<Position>(
-                    maybe_position.clone(),
-                    String::from(format!("position:{}", driver_number,)),
-                )
-                .await;
+            tokio_scoped::scope(|scope| {
+                DriverNumber::all_variants()
+                    .into_iter()
+                    .for_each(|driver_number| {
+                        scope.spawn(async move {
+                            let _ = self
+                                .position_upsert(meeting_key, &driver_number, position)
+                                .await;
+                        });
+                    });
+            });
             self.tx.fire_and_forget(Event::Position);
         }
     }
@@ -213,14 +228,14 @@ impl EventSync for EventSyncImpl<'_> {
         tokio_scoped::scope(|scope| {
             scope.spawn(async move {
                 tokio::join!(
-                    self.car_data_sync(session_key, Some(driver_number), speed),
+                    self.car_data_sync(session_key, speed),
                     self.intervals_sync(session_key, maybe_interval),
                     // We want to sync all team radio, not by driver
                     self.team_radio_sync(session_key, None),
                     //TODO: Research required: lap could cause issues, depending on value provided.
                     self.laps_sync(session_key, &driver_number, lap),
                     self.pit_sync(session_key, pit_duration),
-                    self.position_sync(meeting_key, &driver_number, position),
+                    self.position_sync(meeting_key, position),
                     self.stints_sync(session_key, tyre_age),
                 );
             });
