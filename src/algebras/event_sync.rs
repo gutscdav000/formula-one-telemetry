@@ -19,12 +19,13 @@ use tokio::time::{self, Duration};
 
 #[async_trait]
 pub trait EventSync {
-    async fn car_data_sync(
+    async fn car_data_upsert(
         &self,
         session_key: u32,
-        driver_number: Option<DriverNumber>,
+        driver_number: DriverNumber,
         speed: Option<u32>,
     );
+    async fn car_data_sync(&self, session_key: u32, speed: Option<u32>);
     async fn intervals_sync(&self, session_key: u32, maybe_interval: Option<f32>);
     async fn team_radio_sync(&self, session_key: u32, driver_number: Option<DriverNumber>);
     async fn laps_sync(&self, session_key: u32, driver_number: &DriverNumber, lap: u32);
@@ -59,28 +60,39 @@ pub struct EventSyncImpl<'a> {
 
 #[async_trait]
 impl EventSync for EventSyncImpl<'_> {
-    async fn car_data_sync(
+    async fn car_data_upsert(
         &self,
         session_key: u32,
-        driver_number: Option<DriverNumber>,
+        driver_number: DriverNumber,
         speed: Option<u32>,
     ) {
+        let maybe_car_data = self
+            .api
+            .get_car_data(session_key, Some(driver_number), speed);
+        let _ = self
+            .redis
+            .redis_fire_and_forget::<CarData>(
+                maybe_car_data.clone(),
+                String::from(format!("car_data:{}", driver_number)),
+            )
+            .await;
+    }
+
+    async fn car_data_sync(&self, session_key: u32, speed: Option<u32>) {
         let mut time_interval = time::interval(Duration::from_secs(
             self.delay_config.car_data_duration_secs,
         ));
         loop {
             time_interval.tick().await;
-            let maybe_car_data = self.api.get_car_data(session_key, driver_number, speed);
-            let _ = self
-                .redis
-                .redis_fire_and_forget::<CarData>(
-                    maybe_car_data.clone(),
-                    String::from(format!(
-                        "car_data:{}",
-                        driver_number.unwrap_or(DriverNumber::new(0)) //this state should be unrepresntable, but still an anti pattern
-                    )),
-                )
-                .await;
+            tokio_scoped::scope(|scope| {
+                DriverNumber::all_variants()
+                    .into_iter()
+                    .for_each(|driver_num| {
+                        scope.spawn(async move {
+                            let _ = self.car_data_upsert(session_key, driver_num, speed).await;
+                        });
+                    });
+            });
             self.tx.fire_and_forget(Event::CarData);
         }
     }

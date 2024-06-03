@@ -37,7 +37,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .and_then(|vec| vec.clone().pop())
         .expect("Session not found, or request timed out");
 
-    let driver_number = get_driver_number(&DriverName::LandoNorris);
+    let driver_number = DriverNumber::get_driver_number(&DriverName::LandoNorris);
     let redis_client: &'static RedisImpl = Box::leak(Box::new(
         RedisImpl::default().expect("unable to connect to redis"),
     ));
