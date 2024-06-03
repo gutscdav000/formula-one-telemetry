@@ -14,7 +14,7 @@ mod tests {
 
     #[test]
     fn successful_car_location_request() {
-        let driver_number = get_driver_number(&DriverName::MaxVerstappen);
+        let driver_number = DriverNumber::get_driver_number(&DriverName::MaxVerstappen);
         let expected_car_locations = vec![
             CarLocation {
                 date: "2023-09-16T13:03:35.292000+00:00".to_string(),

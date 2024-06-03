@@ -31,7 +31,7 @@ mod tests {
             session_type: "Race".to_string(),
             year: 2023,
         };
-        let driver_number = get_driver_number(&DriverName::MaxVerstappen);
+        let driver_number = DriverNumber::get_driver_number(&DriverName::MaxVerstappen);
 
         let expected_laps = vec![Lap {
             date_start: "2023-07-29T16:07:30.848000+00:00".to_string(),
