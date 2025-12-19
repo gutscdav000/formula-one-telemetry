@@ -9,6 +9,7 @@ pub trait HttpRequester {
     fn get<T: DeserializeOwned>(&self, url: &str) -> Result<T, Box<dyn Error>>;
 }
 
+#[derive(Clone)]
 pub struct TelemetryHttpRequester;
 impl HttpRequester for TelemetryHttpRequester {
     fn get<T: DeserializeOwned>(&self, url: &str) -> Result<T, Box<dyn Error>> {

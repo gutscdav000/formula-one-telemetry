@@ -1,3 +1,4 @@
+#[derive(Clone)]
 pub struct EventSyncConfig {
     pub car_data_duration_secs: u64,
     pub interval_duration_secs: u64,

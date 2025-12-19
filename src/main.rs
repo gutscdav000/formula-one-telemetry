@@ -22,12 +22,12 @@ use tracing::info;
 async fn main() -> Result<(), Box<dyn Error>> {
     env_logger::init();
 
-    let uri: &'static str = Box::leak(Box::new(String::from("https://api.openf1.org"))).as_str();
-    let http_requester: &'static TelemetryHttpRequester = &TelemetryHttpRequester;
-    let api: &'static CarDataApiImpl = Box::leak(Box::new(CarDataApiImpl {
-        http_requester: &http_requester,
-        uri: &uri,
-    }));
+    let uri = String::from("https://api.openf1.org");
+    let http_requester = TelemetryHttpRequester;
+    let api = CarDataApiImpl {
+        http_requester: http_requester.clone(),
+        uri: uri.clone(),
+    };
 
     let sessions: Option<Vec<Session>> =
         api.get_session(&"Italy".to_string(), &"Qualifying".to_string(), 2024);
@@ -36,13 +36,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .and_then(|vec| vec.clone().pop())
         .expect("Session not found, or request timed out");
 
-    let redis_client: &'static RedisImpl = Box::leak(Box::new(
-        RedisImpl::default().expect("unable to connect to redis"),
-    ));
+    let redis_client = RedisImpl::default().expect("unable to connect to redis");
     let (channel_tx, _) = broadcast::channel::<Message>(100);
     let channel_queue = Arc::new(ChannelQueueImpl { tx: channel_tx });
 
-    let event_sync_delay_config: &'static EventSyncConfig = &EventSyncConfig {
+    let event_sync_delay_config = EventSyncConfig {
         car_data_duration_secs: 2,
         interval_duration_secs: 5,
         team_radio_duration_secs: 30,
@@ -52,9 +50,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
         stints_duration_secs: 120,
     };
     let event_sync = EventSyncImpl {
-        api: &api,
-        redis: &redis_client,
-        delay_config: &event_sync_delay_config,
+        api: api.clone(),
+        redis: redis_client.clone(),
+        delay_config: event_sync_delay_config.clone(),
         tx: channel_queue.clone(),
     };
 

@@ -52,15 +52,16 @@ pub trait EventSync {
     );
 }
 
-pub struct EventSyncImpl<'a> {
-    pub api: &'a CarDataApiImpl<'a>,
-    pub redis: &'a RedisImpl,
-    pub delay_config: &'a EventSyncConfig,
+#[derive(Clone)]
+pub struct EventSyncImpl {
+    pub api: CarDataApiImpl,
+    pub redis: RedisImpl,
+    pub delay_config: EventSyncConfig,
     pub tx: Arc<dyn ChannelQueue>,
 }
 
 #[async_trait]
-impl EventSync for EventSyncImpl<'_> {
+impl EventSync for EventSyncImpl {
     async fn car_data_upsert(
         &self,
         session_key: u32,
