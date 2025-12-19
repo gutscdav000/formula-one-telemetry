@@ -15,6 +15,7 @@ use crate::types::stint::Stint;
 use crate::types::team_radio::TeamRadio;
 use crate::types::weather::Weather;
 use log::debug;
+use std::sync::Arc;
 use std::vec::Vec;
 
 pub trait CarDataApi {
@@ -72,19 +73,19 @@ pub trait CarDataApi {
     ) -> Option<Vec<Weather>>;
 }
 
-pub struct CarDataApiImpl<'a> {
-    pub http_requester: &'a TelemetryHttpRequester,
-    pub uri: &'a str,
+pub struct CarDataApiImpl {
+    pub http_requester: Arc<TelemetryHttpRequester>,
+    pub uri: Arc<String>,
 }
 
-impl CarDataApi for CarDataApiImpl<'_> {
+impl CarDataApi for CarDataApiImpl {
     fn get_session(
         &self,
         country_name: &str,
         session_name: &str,
         year: u32,
     ) -> Option<Vec<Session>> {
-        let request_url = self.uri.to_owned()
+        let request_url = self.uri.as_str().to_owned()
             + &format!(
                 "/v1/sessions?country_name={country_name}&session_name={session_name}&year={year}"
             );
@@ -97,7 +98,7 @@ impl CarDataApi for CarDataApiImpl<'_> {
     }
 
     fn get_drivers(&self, session_key: u32, driver_number: &DriverNumber) -> Option<Vec<Driver>> {
-        let request_url = self.uri.to_owned()
+        let request_url = self.uri.as_str().to_owned()
             + &format!(
                 "/v1/drivers?driver_number={}&session_key={}",
                 driver_number, session_key
@@ -119,7 +120,7 @@ impl CarDataApi for CarDataApiImpl<'_> {
         let driver_num_str =
             driver_number.map_or_else(|| "".to_string(), |dr| format!("&driver_number={}", dr));
         let speed = speed.map_or_else(|| "".to_string(), |s| format!("&speed>={}", s));
-        let request_url = self.uri.to_owned()
+        let request_url = self.uri.as_str().to_owned()
             + &format!(
                 "/v1/car_data?session_key={}{}{}",
                 session_key, driver_num_str, speed
@@ -139,7 +140,7 @@ impl CarDataApi for CarDataApiImpl<'_> {
     ) -> Option<Vec<Interval>> {
         let interval_query_param =
             maybe_interval.map_or_else(|| "".to_string(), |i| format!("&interval<{}", i));
-        let request_url = self.uri.to_owned()
+        let request_url = self.uri.as_str().to_owned()
             + &format!(
                 "/v1/intervals?session_key={}{}",
                 session_key, interval_query_param
@@ -158,7 +159,7 @@ impl CarDataApi for CarDataApiImpl<'_> {
         driver_number: &DriverNumber,
         lap: u32,
     ) -> Option<Vec<Lap>> {
-        let request_url = self.uri.to_owned()
+        let request_url = self.uri.as_str().to_owned()
             + &format!(
                 "/v1/laps?session_key={}&driver_number={}&lap_number={}",
                 session_key, driver_number, lap
@@ -178,7 +179,7 @@ impl CarDataApi for CarDataApiImpl<'_> {
         start_time: &str,
         end_time: &str,
     ) -> Option<Vec<CarLocation>> {
-        let request_url = self.uri.to_owned()
+        let request_url = self.uri.as_str().to_owned()
             + &format!(
                 "/v1/location?session_key={}&driver_number={}&date>{}&date<{}",
                 session_key, driver_number, start_time, end_time
@@ -193,7 +194,7 @@ impl CarDataApi for CarDataApiImpl<'_> {
 
     fn get_meeting(&self, year: u32, country: &str) -> Option<Vec<Meeting>> {
         let request_url =
-            self.uri.to_owned() + &format!("/v1/meetings?year={}&country_name={}", year, country);
+            self.uri.as_str().to_owned() + &format!("/v1/meetings?year={}&country_name={}", year, country);
         debug!("{:?}", request_url);
         match self.http_requester.get::<Vec<Meeting>>(&request_url) {
             Ok(meeting) if meeting.is_empty() => None,
@@ -205,7 +206,7 @@ impl CarDataApi for CarDataApiImpl<'_> {
     fn get_pit(&self, session_key: u32, pit_duration: Option<u32>) -> Option<Vec<Pit>> {
         let pit_duration_str =
             pit_duration.map_or_else(|| "".to_string(), |p| format!("&pit_duration<{}", &p));
-        let request_url = self.uri.to_owned()
+        let request_url = self.uri.as_str().to_owned()
             + &format!("/v1/pit?session_key={}{}", session_key, pit_duration_str);
         debug!("{:?}", request_url);
         match self.http_requester.get::<Vec<Pit>>(&request_url) {
@@ -222,7 +223,7 @@ impl CarDataApi for CarDataApiImpl<'_> {
         position: Option<u32>,
     ) -> Option<Vec<Position>> {
         let position_str = position.map_or_else(|| "".to_string(), |p| format!("&position<={}", p));
-        let request_url = self.uri.to_owned()
+        let request_url = self.uri.as_str().to_owned()
             + &format!(
                 "/v1/position?meeting_key={}&driver_number={}{}",
                 meeting_key, driver_number, position_str
@@ -244,7 +245,7 @@ impl CarDataApi for CarDataApiImpl<'_> {
         end_date: Option<String>,
     ) -> Option<Vec<RaceControl>> {
         let params = build_query_params(category, flag, driver_number, start_date, end_date);
-        let request_url = self.uri.to_owned() + &"/v1/race_control" + &params;
+        let request_url = self.uri.as_str().to_owned() + &"/v1/race_control" + &params;
         debug!("{:?}", request_url);
         match self.http_requester.get::<Vec<RaceControl>>(&request_url) {
             Ok(race_control) if race_control.is_empty() => None,
@@ -256,7 +257,7 @@ impl CarDataApi for CarDataApiImpl<'_> {
     fn get_stints(&self, session_key: u32, tyre_age: Option<u32>) -> Option<Vec<Stint>> {
         let tyre_age_at_start =
             tyre_age.map_or_else(|| "".to_string(), |t| format!("&tyre_age_at_start>={}", &t));
-        let request_url = self.uri.to_owned()
+        let request_url = self.uri.as_str().to_owned()
             + &format!(
                 "/v1/stints?session_key={}{}",
                 session_key, tyre_age_at_start
@@ -276,7 +277,7 @@ impl CarDataApi for CarDataApiImpl<'_> {
     ) -> Option<Vec<TeamRadio>> {
         let driver_num_str =
             driver_number.map_or_else(|| "".to_string(), |dn| format!("&driver_number={}", &dn));
-        let request_url = self.uri.to_owned()
+        let request_url = self.uri.as_str().to_owned()
             + &format!(
                 "/v1/team_radio?session_key={}{}",
                 session_key, driver_num_str
@@ -301,7 +302,7 @@ impl CarDataApi for CarDataApiImpl<'_> {
             || "".to_string(),
             |tt| format!("&track_temperature>={}", &tt),
         );
-        let request_url = self.uri.to_owned()
+        let request_url = self.uri.as_str().to_owned()
             + &format!(
                 "/v1/weather?meeting_key={}{}{}",
                 meeting_key, wind_direction_str, track_temp_str
